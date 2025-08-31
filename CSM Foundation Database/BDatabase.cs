@@ -5,6 +5,7 @@ using CSM_Foundation_Core;
 using CSM_Foundation_Core.Utils;
 
 using CSM_Foundation_Database.Entity.Bases;
+using CSM_Foundation_Database.Exceptions;
 using CSM_Foundation_Database.Models;
 using CSM_Foundation_Database.Utilitites;
 
@@ -13,6 +14,26 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CSM_Foundation.Database;
+
+
+[AttributeUsage(AttributeTargets.Interface, Inherited = false)]
+public class ActivatorReferenceAttribute : Attribute {
+
+    public Type Reference { get; }
+
+    /// <summary>
+    ///     Creates a new instance.
+    /// </summary>
+    /// <param name="reference">
+    ///     The default reference type to get the correct instance activation of the <see langword="interface"/>
+    /// </param>
+    /// <remarks>
+    ///     Attribute used to specify <see cref="BDatabase{TDatabases}"/> activation of their inner <see cref="DbSet{TEntity}"/> when an interface is configured.
+    /// </remarks>
+    public ActivatorReferenceAttribute(Type reference) {
+        Reference = reference;
+    }
+}
 
 /// <summary>
 ///     Represents a CSM Database, wich configures and handles data management along business entities and 
@@ -152,10 +173,10 @@ public abstract partial class BDatabase<TDatabases>
     /// <returns>
     ///     The strict validated collection of [<see cref="BBusinessDatabaseEntity"/>]s and [<see cref="BConnector{TSource, TTarget}"/>]s.
     /// </returns>
-    BEntity[] ValidateSets() {
+    protected BEntity[] ValidateSets() {
         Type databaseType = GetType();
 
-        List<BEntity> sets = [];
+        List<BEntity> entityModels = [];
         IEnumerable<PropertyInfo> dbSets = databaseType
            .GetProperties()
            .Where(
@@ -168,26 +189,52 @@ public abstract partial class BDatabase<TDatabases>
 
         foreach (PropertyInfo dbSet in dbSets) {
             Type generic = dbSet.PropertyType.GetGenericArguments()[0]
-                ?? throw new Exception($"DBSet [{dbSet.Name}] generic gathering failure");
+                ?? throw new XDatabase(
+                        XDatabaseEvents.WRONG_DBSET_ENTITY,
+                        new Dictionary<string, object?> {
+                                { "DbSet", dbSet.Name }
+                            }
+                    );
 
-            sets.Add((BEntity)Activator.CreateInstance(generic)!);
+            if (!generic.IsInterface) {
+                BEntity instance = (BEntity)Activator.CreateInstance(generic)!;
+                entityModels.Add(instance);
+                continue;
+            }
+
+            ActivatorReferenceAttribute activatorReference = generic.GetCustomAttribute<ActivatorReferenceAttribute>()
+                ?? throw new XDatabase(
+                        XDatabaseEvents.INTERFACE_UNCONFIGURED,
+                        data: new Dictionary<string, object?> {
+                            { "DbSet", dbSet.Name },
+                            { "Entity", generic.Name }
+                        }
+                    );
+
+            entityModels.Add(
+                    (BEntity)Activator.CreateInstance(activatorReference.Reference)!
+                );
         }
 
-        return [.. sets];
+        return [.. entityModels];
     }
 
 
     public void ValidateHealth() {
-        ConsoleUtils.Announce(
-            $"Setting up ORM",
-            new() {
-                { "Database", GetType()?.Namespace ?? "---" },
-                { "Base", nameof(BDatabase<TDatabases>) }
-            }
-        );
+        if (LogsOn) {
+            ConsoleUtils.Announce(
+                    $"Setting up ORM",
+                    new() {
+                                { "Database", GetType()?.Namespace ?? "---" },
+                                { "Base", nameof(BDatabase<TDatabases>) }
+                    }
+                );
+        }
 
         if (Database.CanConnect()) {
-            ConsoleUtils.Success($"[{GetType().FullName}] ORM Set");
+
+            if (LogsOn)
+                ConsoleUtils.Success($"[{GetType().FullName}] ORM Set");
 
             IEnumerable<string> pendingMigrations = Database.GetPendingMigrations();
             if (pendingMigrations.Any()) {
@@ -209,17 +256,19 @@ public abstract partial class BDatabase<TDatabases>
     public void Evaluate() {
         BEntity[] sets = ValidateSets();
 
-        ConsoleUtils.Announce(
-            $"[{GetType().Name}] Validatig Sets...",
-            new() {
+        if (LogsOn) {
+            ConsoleUtils.Announce(
+                $"[{GetType().Name}] Validatig Sets...",
+                new() {
                 { "Count", sets.Length }
-            }
-        );
+                }
+            );
+        }
 
         Exception[] evResults = [];
         foreach (BEntity set in sets) {
             Exception[] result = set.EvaluateDefinition();
-            if (result.Length > 0) {
+            if (result.Length > 0 && LogsOn) {
                 ConsoleUtils.Warning(
                     "Wrong [Set] definition",
                     new() {
@@ -234,7 +283,7 @@ public abstract partial class BDatabase<TDatabases>
 
         if (evResults.Length > 0) {
             throw new Exception("Database [Set] definition failures");
-        } else {
+        } else if (LogsOn) {
             ConsoleUtils.Success($"[{GetType().Name}] Set validation succeeded");
         }
     }
@@ -263,13 +312,15 @@ public abstract partial class BDatabase<TDatabases>
 
             string envValue = SystemUtils.GetVar("ASPNETCORE_ENVIRONMENT") ?? SystemUtils.GetVar("DOTNET_ENVIRONMENT") ?? "---";
 
-            ConsoleUtils.Warning(
-                    $"Running EF Design Time Execution",
-                    new Dictionary<string, object?> {
+            if(LogsOn) {
+                ConsoleUtils.Warning(
+                        $"Running EF Design Time Execution",
+                        new Dictionary<string, object?> {
                         { "Environment", envValue },
                         { "Connection", connectionString },
-                    }
-                );
+                        }
+                    );
+            }
         }
     }
 
