@@ -1,10 +1,12 @@
-name: Version Update Check
+name: (CSM Foundation Database) Version Check
 
 on:
   pull_request:
     branches:
       - main
     types: [opened, synchronize]
+    paths:
+      - 'CSM Foundation Database/**'
 
 jobs:
   check-version:
