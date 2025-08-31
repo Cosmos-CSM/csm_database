@@ -19,6 +19,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: 🔑 Configure NuGet to use GitHub Packages
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.PUBLISH_PAT }}
+        run: |
+          dotnet nuget add source \
+            "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --name "github" \
+            --username ${{ github.actor }} \
+            --password "$NUGET_AUTH_TOKEN" \
+            --store-password-in-clear-text
+
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
