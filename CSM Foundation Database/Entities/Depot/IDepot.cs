@@ -1,10 +1,10 @@
 ﻿using CSM_Foundation.Database;
 
-using CSM_Foundation_Database.Entity.Depot.IDepot_Read;
-using CSM_Foundation_Database.Entity.Depot.IDepot_Update;
-using CSM_Foundation_Database.Entity.Depot.IDepot_View;
+using CSM_Foundation_Database.Entities.Depot.IDepot_Read;
+using CSM_Foundation_Database.Entities.Depot.IDepot_Update;
+using CSM_Foundation_Database.Entities.Depot.IDepot_View;
 
-namespace CSM_Foundation_Database.Entity.Depot;
+namespace CSM_Foundation_Database.Entities.Depot;
 
 /// <summary>
 ///     [Delegate] declaration to expose an easier API to generate the accumulative instructions for the query after filtering.

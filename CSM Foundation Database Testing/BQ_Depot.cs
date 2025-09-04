@@ -3,13 +3,13 @@ using System.Reflection;
 
 using CSM_Foundation.Database;
 
-using CSM_Foundation_Database.Entity.Depot;
-using CSM_Foundation_Database.Entity.Depot.IDepot_Read;
-using CSM_Foundation_Database.Entity.Depot.IDepot_Update;
-using CSM_Foundation_Database.Entity.Depot.IDepot_View;
-using CSM_Foundation_Database.Entity.Depot.IDepot_View.ViewFilters;
-using CSM_Foundation_Database.Entity.Models.Input;
-using CSM_Foundation_Database.Entity.Models.Output;
+using CSM_Foundation_Database.Entities.Depot;
+using CSM_Foundation_Database.Entities.Depot.IDepot_Read;
+using CSM_Foundation_Database.Entities.Depot.IDepot_Update;
+using CSM_Foundation_Database.Entities.Depot.IDepot_View;
+using CSM_Foundation_Database.Entities.Depot.IDepot_View.ViewFilters;
+using CSM_Foundation_Database.Entities.Models.Input;
+using CSM_Foundation_Database.Entities.Models.Output;
 using CSM_Foundation_Database.Utilitites;
 
 using CSM_Foundation_Database_Testing.Disposing;

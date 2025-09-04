@@ -1,9 +1,9 @@
 ﻿using CSM_Foundation.Database;
 
-using CSM_Foundation_Database.Entity.Bases;
-using CSM_Foundation_Database.Entity.Models.Input;
+using CSM_Foundation_Database.Entities.Bases;
+using CSM_Foundation_Database.Entities.Models.Input;
 
-namespace CSM_Foundation_Database.Entity.Depot.IDepot_Update;
+namespace CSM_Foundation_Database.Entities.Depot.IDepot_Update;
 
 /// <summary>
 ///     [Interface] describing [Update] actions for [Depot] implementations.

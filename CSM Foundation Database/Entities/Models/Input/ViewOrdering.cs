@@ -1,6 +1,6 @@
-﻿using CSM_Foundation_Database.Entity.Depot.IDepot_View;
+﻿using CSM_Foundation_Database.Entities.Depot.IDepot_View;
 
-namespace CSM_Foundation_Database.Entity.Models.Input;
+namespace CSM_Foundation_Database.Entities.Models.Input;
 /// <summary>
 ///     Stores a ordering step options for the <see cref="ViewOutput{TMigrationSet}"/>
 ///     builder, indicating how the current ordering step should behave.

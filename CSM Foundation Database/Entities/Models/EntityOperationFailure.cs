@@ -2,7 +2,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace CSM_Foundation_Database.Entity.Models;
+namespace CSM_Foundation_Database.Entities.Models;
 
 
 /// <summary>

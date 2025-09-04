@@ -2,7 +2,7 @@
 
 using System.Linq.Expressions;
 
-namespace CSM_Foundation_Database.Entity.Depot.IDepot_Read;
+namespace CSM_Foundation_Database.Entities.Depot.IDepot_Read;
 
 
 /// <summary>

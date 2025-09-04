@@ -1,6 +1,6 @@
 ﻿using CSM_Foundation.Database;
 
-namespace CSM_Foundation_Database.Entity;
+namespace CSM_Foundation_Database.Entities;
 
 /// <summary>
 ///     Attribute to mark a property as a relation from the main Entity.

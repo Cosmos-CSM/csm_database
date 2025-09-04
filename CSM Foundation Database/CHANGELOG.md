@@ -1,5 +1,21 @@
 # CSM Foundation Database CHANGELOG
 
+## [1.2.0] - 03.09-2025
+
+### Added
+
+- A new [BActivableEntity] / [IActivableEntity] base added, that indicates an entity has [IsEnabled] property indicating if the object is enabled or no.
+
+- A new [BCatalogEntity] / [ICatalogEntity] base added, that indicates an entity is catalog referenced, meaning it has [Name], [Description], [IsEnabled] and a [Reference].
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 1.3.0            | 1.3.0           |
+| Microsoft.EntityFrameworkCore           | 9.0.8            | 9.0.8           |
+| Microsoft.EntityFrameworkCore.SqlServer | 9.0.8            | 9.0.8           |
+
 ## [1.1.0] - 06.08-2025
 
 ### Added

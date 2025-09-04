@@ -4,7 +4,7 @@ using CSM_Foundation_Core;
 using CSM_Foundation_Core.Exceptions;
 using CSM_Foundation_Core.Exceptions.Models;
 
-namespace CSM_Foundation_Database.Entity.Depot;
+namespace CSM_Foundation_Database.Entities.Depot;
 
 /// <summary>
 ///     Represents the <see cref="XDepot{TEntity}"/> trigger events.

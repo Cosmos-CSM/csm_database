@@ -1,6 +1,6 @@
 ﻿using CSM_Foundation.Database;
 
-namespace CSM_Foundation_Database.Entity.Depot.IDepot_Update;
+namespace CSM_Foundation_Database.Entities.Depot.IDepot_Update;
 
 /// <summary>
 ///     [Record] for the output of an entity [Update] operation.

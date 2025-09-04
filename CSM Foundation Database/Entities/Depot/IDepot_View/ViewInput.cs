@@ -1,9 +1,9 @@
 ﻿using CSM_Foundation.Database;
 
-using CSM_Foundation_Database.Entity.Depot.IDepot_View.ViewFilters;
-using CSM_Foundation_Database.Entity.Models.Input;
+using CSM_Foundation_Database.Entities.Depot.IDepot_View.ViewFilters;
+using CSM_Foundation_Database.Entities.Models.Input;
 
-namespace CSM_Foundation_Database.Entity.Depot.IDepot_View;
+namespace CSM_Foundation_Database.Entities.Depot.IDepot_View;
 
 /// <summary>
 ///     Defines options to build a [View]

@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 
-namespace CSM_Foundation_Database.Entity.Depot.IDepot_View.ViewFilters;
+namespace CSM_Foundation_Database.Entities.Depot.IDepot_View.ViewFilters;
 
 /// <summary>
 ///     Stores the available options for [View] [Filter] behavior.

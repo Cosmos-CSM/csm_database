@@ -1,6 +1,6 @@
 ﻿using CSM_Foundation.Database;
 
-namespace CSM_Foundation_Database.Entity.Models.Output;
+namespace CSM_Foundation_Database.Entities.Models.Output;
 
 /// <summary>
 ///     [Output] object for a pagination proccess result information.

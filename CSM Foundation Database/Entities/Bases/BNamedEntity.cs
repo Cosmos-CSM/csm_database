@@ -1,8 +1,8 @@
-﻿using CSM_Foundation.Database;
+﻿using System.ComponentModel.DataAnnotations;
 
-using System.ComponentModel.DataAnnotations;
+using CSM_Foundation.Database;
 
-namespace CSM_Foundation_Database.Entity.Bases;
+namespace CSM_Foundation_Database.Entities.Bases;
 
 /// <summary>
 ///     Represents an <see cref="IEntity"/> with <see cref="BNamedEntity.Name"/> and <see cref="BNamedEntity.Description"/> properties

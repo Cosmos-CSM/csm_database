@@ -6,7 +6,7 @@ using CSM_Foundation.Database;
 
 using CSM_Foundation_Core.Convertion;
 
-namespace CSM_Foundation_Database.Entity.Depot.IDepot_View.ViewFilters;
+namespace CSM_Foundation_Database.Entities.Depot.IDepot_View.ViewFilters;
 
 /// <summary>
 ///     Represents a View system filter node, building and evaluating by itself (implementations) the way the View operation will be filtered.

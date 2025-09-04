@@ -3,7 +3,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace CSM_Foundation_Database.Entity.Depot.IDepot_View.ViewFilters;
+namespace CSM_Foundation_Database.Entities.Depot.IDepot_View.ViewFilters;
 
 /// <summary>
 ///     <see langword="interface"/> for <see cref="IViewFilter{TSet}"/>.

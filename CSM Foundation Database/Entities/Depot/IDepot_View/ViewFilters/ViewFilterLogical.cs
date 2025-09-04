@@ -2,7 +2,7 @@
 
 using System.Linq.Expressions;
 
-namespace CSM_Foundation_Database.Entity.Depot.IDepot_View.ViewFilters;
+namespace CSM_Foundation_Database.Entities.Depot.IDepot_View.ViewFilters;
 
 /// <summary>
 ///     {implementation} <see langword="class"/> for <see cref="ViewFilterLogical{T}"/>.

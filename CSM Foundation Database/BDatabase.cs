@@ -4,7 +4,7 @@ using System.Reflection;
 using CSM_Foundation_Core;
 using CSM_Foundation_Core.Utils;
 
-using CSM_Foundation_Database.Entity.Bases;
+using CSM_Foundation_Database.Entities.Bases;
 using CSM_Foundation_Database.Exceptions;
 using CSM_Foundation_Database.Models;
 using CSM_Foundation_Database.Utilitites;
@@ -288,9 +288,9 @@ public abstract partial class BDatabase<TDatabases>
         }
     }
 
-    protected virtual void DefineSet(BEntity Entity, EntityTypeBuilder mBuilder) { }
+    protected virtual void DesignEntity(BEntity Entity, EntityTypeBuilder mBuilder) { }
 
-    protected virtual void DefineSource(ModelBuilder mBuilder) { }
+    protected virtual void DesignDb(ModelBuilder mBuilder) { }
 
     #region EF Native Methods
 
@@ -312,7 +312,7 @@ public abstract partial class BDatabase<TDatabases>
 
             string envValue = SystemUtils.GetVar("ASPNETCORE_ENVIRONMENT") ?? SystemUtils.GetVar("DOTNET_ENVIRONMENT") ?? "---";
 
-            if(LogsOn) {
+            if (LogsOn) {
                 ConsoleUtils.Warning(
                         $"Running EF Design Time Execution",
                         new Dictionary<string, object?> {
@@ -326,7 +326,7 @@ public abstract partial class BDatabase<TDatabases>
 
     protected override void OnModelCreating(ModelBuilder mBuilder) {
 
-        DefineSource(mBuilder);
+        DesignDb(mBuilder);
 
         IEnumerable<IMutableEntityType> entityTypes = mBuilder.Model.GetEntityTypes();
         foreach (IMutableEntityType entityType in entityTypes) {
@@ -344,17 +344,17 @@ public abstract partial class BDatabase<TDatabases>
 
         BEntity[] sets = ValidateSets();
 
-        foreach (BEntity set in sets) {
-            Type setType = set.GetType();
+        foreach (BEntity entity in sets) {
+            Type setType = entity.GetType();
             mBuilder.Entity(
                 setType,
                 (etBuilder) => {
                     etBuilder.HasKey(nameof(IEntity.Id));
                     etBuilder.Property<long>(nameof(IEntity.Id)).IsRequired();
 
-                    if (set is BNamedEntity) {
-                        PropertyInfo nameProperty = set.GetProperty(nameof(BNamedEntity.Name));
-                        PropertyInfo descriptionProperty = set.GetProperty(nameof(BNamedEntity.Description));
+                    if (entity is INamedEntity) {
+                        PropertyInfo nameProperty = entity.GetProperty(nameof(INamedEntity.Name));
+                        PropertyInfo descriptionProperty = entity.GetProperty(nameof(INamedEntity.Description));
 
                         etBuilder.HasIndex(nameProperty.Name).IsUnique();
                         etBuilder.Property(nameProperty.Name).HasMaxLength(100).IsRequired();
@@ -362,11 +362,32 @@ public abstract partial class BDatabase<TDatabases>
                         etBuilder.Property(descriptionProperty.Name).HasMaxLength(200);
                     }
 
-                    DefineSet(set, etBuilder);
+                    if (entity is IReferencedEntity) {
+                        PropertyInfo referenceProperty = entity.GetProperty(nameof(IReferencedEntity.Reference));
 
-                    etBuilder.Property(nameof(IEntity.Timestamp)).HasColumnType("datetime2(7)").HasDefaultValueSql("GETUTCDATE()");
+                        etBuilder.HasIndex(referenceProperty.Name)
+                            .IsUnique();
 
-                    set.DesignEntity(etBuilder);
+                        etBuilder.Property(referenceProperty.Name)
+                            .HasMaxLength(8)
+                            .IsFixedLength()
+                            .IsRequired();
+                    }
+
+                    if (entity is IActivableEntity) {
+                        PropertyInfo isEnabledProperty = entity.GetProperty(nameof(IActivableEntity.IsEnabled));
+
+                        etBuilder.Property(isEnabledProperty.Name)
+                            .IsRequired();
+                    }
+
+                    DesignEntity(entity, etBuilder);
+
+                    etBuilder.Property(nameof(IEntity.Timestamp))
+                        .HasColumnType("datetime2(7)")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    entity.DesignEntity(etBuilder);
                 }
             );
         }

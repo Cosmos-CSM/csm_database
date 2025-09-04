@@ -1,10 +1,10 @@
 ﻿using CSM_Foundation.Database;
 
-using CSM_Foundation_Database.Entity.Depot;
-using CSM_Foundation_Database.Entity.Models.Input;
-using CSM_Foundation_Database.Entity.Models.Output;
+using CSM_Foundation_Database.Entities.Depot;
+using CSM_Foundation_Database.Entities.Models.Input;
+using CSM_Foundation_Database.Entities.Models.Output;
 
-namespace CSM_Foundation_Database.Entity.Depot.IDepot_Read;
+namespace CSM_Foundation_Database.Entities.Depot.IDepot_Read;
 
 /// <summary>
 ///     [Interface] to expose common [Read] action methods for <see cref="IDepot{TSet}"/> implementations.

@@ -1,8 +1,8 @@
 ﻿using CSM_Foundation.Database;
 
-using CSM_Foundation_Database.Entity.Models;
+using CSM_Foundation_Database.Entities.Models;
 
-namespace CSM_Foundation_Database.Entity.Models.Output;
+namespace CSM_Foundation_Database.Entities.Models.Output;
 
 /// <summary>
 ///     [Record] that stores the information about a batch operation output result.

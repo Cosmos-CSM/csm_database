@@ -6,20 +6,20 @@ using CSM_Foundation.Database;
 
 using CSM_Foundation_Core;
 
-using CSM_Foundation_Database.Entity.Bases;
-using CSM_Foundation_Database.Entity.Depot.IDepot_Read;
-using CSM_Foundation_Database.Entity.Depot.IDepot_Update;
-using CSM_Foundation_Database.Entity.Depot.IDepot_View;
-using CSM_Foundation_Database.Entity.Depot.IDepot_View.ViewFilters;
-using CSM_Foundation_Database.Entity.Models;
-using CSM_Foundation_Database.Entity.Models.Input;
-using CSM_Foundation_Database.Entity.Models.Output;
+using CSM_Foundation_Database.Entities.Bases;
+using CSM_Foundation_Database.Entities.Depot.IDepot_Read;
+using CSM_Foundation_Database.Entities.Depot.IDepot_Update;
+using CSM_Foundation_Database.Entities.Depot.IDepot_View;
+using CSM_Foundation_Database.Entities.Depot.IDepot_View.ViewFilters;
+using CSM_Foundation_Database.Entities.Models;
+using CSM_Foundation_Database.Entities.Models.Input;
+using CSM_Foundation_Database.Entities.Models.Output;
 using CSM_Foundation_Database.Utilitites;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace CSM_Foundation_Database.Entity.Depot;
+namespace CSM_Foundation_Database.Entities.Depot;
 
 /// <summary>
 ///     Defines base behaviors for a <see cref="IDepot{TMigrationSet}"/>
@@ -43,7 +43,7 @@ public abstract class BDepot<TDatabase, TEntity>
     /// <summary>
     ///     System data disposition manager.
     /// </summary>
-    protected readonly CSM_Foundation_Core.IDisposer<IEntity>? _disposer;
+    protected readonly IDisposer<IEntity>? _disposer;
 
     /// <summary>
     ///     Name to handle direct transactions (not-attached)

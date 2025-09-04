@@ -2,9 +2,7 @@
 
 using CSM_Foundation.Database;
 
-using CSM_Foundation_Core.Convertion;
-
-namespace CSM_Foundation_Database.Entity.Bases;
+namespace CSM_Foundation_Database.Entities.Bases;
 
 
 /// <summary>
@@ -32,17 +30,4 @@ public abstract class BReferencedEntity
     : BEntity, IReferencedEntity {
 
     public string Reference { get; set; } = string.Empty;
-}
-
-/// <summary>
-///     [Converter] concept implementation for complex data structures that are derived from <see cref="IEntity"/>, this converter manager must
-///     be injected into the [JsonSerializerOptions] from you server implementation.
-/// </summary>
-public class EntityConverter
-    : BConverter<IEntity> {
-
-    public EntityConverter(Type[] variations)
-        : base(variations) {
-
-    }
 }

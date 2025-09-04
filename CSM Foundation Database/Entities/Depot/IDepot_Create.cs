@@ -1,8 +1,8 @@
 ﻿using CSM_Foundation.Database;
 
-using CSM_Foundation_Database.Entity.Models.Output;
+using CSM_Foundation_Database.Entities.Models.Output;
 
-namespace CSM_Foundation_Database.Entity.Depot;
+namespace CSM_Foundation_Database.Entities.Depot;
 
 
 /// <summary>

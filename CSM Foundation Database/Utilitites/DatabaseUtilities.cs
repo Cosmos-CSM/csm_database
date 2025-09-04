@@ -7,7 +7,7 @@ using CSM_Foundation_Core;
 using CSM_Foundation_Core.Exceptions;
 using CSM_Foundation_Core.Utils;
 
-using CSM_Foundation_Database.Entity;
+using CSM_Foundation_Database.Entities;
 using CSM_Foundation_Database.Models;
 
 using Microsoft.EntityFrameworkCore;

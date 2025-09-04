@@ -1,8 +1,8 @@
 ﻿using CSM_Foundation.Database;
 
-using CSM_Foundation_Database.Entity.Depot;
+using CSM_Foundation_Database.Entities.Depot;
 
-namespace CSM_Foundation_Database.Entity.Models.Input;
+namespace CSM_Foundation_Database.Entities.Models.Input;
 
 /// <summary>
 ///     [Record] for specific <see cref="IDepot{TEntity}"/> operations,
