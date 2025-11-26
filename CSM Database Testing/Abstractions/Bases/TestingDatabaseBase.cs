@@ -19,7 +19,7 @@ namespace CSM_Database_Testing.Abstractions.Bases;
 /// </typeparam>
 public abstract class TestingDatabaseBase<TDatabase>
     : ITestingDatabase
-    where TDatabase : DatabaseBase<TDatabase> {
+    where TDatabase : DatabaseBase<TDatabase>, new() {
 
     /// <summary>
     ///     Database context instance.  
@@ -27,13 +27,10 @@ public abstract class TestingDatabaseBase<TDatabase>
     protected readonly TDatabase _database;
 
     /// <summary>
-    ///     Creates a new <see cref="TestingDatabaseBase{TDatabase}"/> instance.
+    ///     Creates a new instance.
     /// </summary>
-    /// <param name="Sign">
-    ///     Custom identifier for multiple database testing solutions.
-    /// </param>
-    public TestingDatabaseBase(string Sign = "DB") {
-        _database = DatabaseUtils.Q_Construct<TDatabase>(Sign);
+    public TestingDatabaseBase() {
+        _database = DatabaseUtils.ActivateTestingDatabase<TDatabase>();
     }
 
     [Fact]

@@ -224,42 +224,37 @@ public class DatabaseUtils {
     }
 
     /// <summary>
-    ///     Creates a new <typeparamref name="TDatabase"/> instance for quality/testing purposes, getting the connection options file from 
-    ///     the run settings environment variables required.
+    ///     Creates a testing database context instance by activation.
     /// </summary>
     /// <typeparam name="TDatabase">
-    ///     Database context handler type.
+    ///     Database context type to create.
     /// </typeparam>
     /// <param name="sign">
-    ///     Specific database connection sign for identification.
+    ///     Database signature.
     /// </param>
     /// <param name="options">
-    ///     Specific EF native configuration options for the instance created.
+    ///     Database context EF Native options.
     /// </param>
     /// <returns>
-    ///     An instance of <typeparamref name="TDatabase"/>.
+    ///     An activated database context instance for testing purposes.
     /// </returns>
-    /// <exception cref="Exception">
-    ///     <list type="bullet">
-    ///         <item> Thrown when envrionment variable couldn't be found </item>
-    ///         <item> Thrown when the file specified doesn't match the Connection Options format </item>
-    ///         <item> Thrown when the Activator couldn't create correctly the instance of the database context </item>
-    ///     </list>
-    /// </exception>
-    public static TDatabase Q_Construct<TDatabase>(string sign, DbContextOptions? options = null)
-        where TDatabase : DatabaseBase<TDatabase> {
+    public static TDatabase ActivateTestingDatabase<TDatabase>(string sign = "", DbContextOptions? options = null)
+        where TDatabase : DatabaseBase<TDatabase>, new() {
 
-        string connectionVariable = string.Format(Q_CONNTION_TMPLATE, sign);
+        if (string.IsNullOrWhiteSpace(sign)) {
+            TDatabase refInst = new();
+            sign = refInst.Sign;
+        }
 
-        string connectionPath = Environment.GetEnvironmentVariable(connectionVariable)
-            ?? throw new Exception($"Unable to run tests for {typeof(TDatabase).FullName}, due to couldn't be found Connection file path (Make sure the environment variable [{connectionVariable}] is set or configured at the .runsettings tests context)");
+        string connVar = string.Format(Q_CONNTION_TMPLATE, sign);
 
-        using FileStream fileReader = new(connectionPath, FileMode.Open, FileAccess.Read);
+        string connPath = Environment.GetEnvironmentVariable(connVar)
+            ?? throw new Exception($"Unable to run tests for {typeof(TDatabase).FullName}, due to couldn't be found Connection file path (Make sure the environment variable [{connVar}] is set or configured at the .runsettings tests context)");
+
+        using FileStream fileReader = new(connPath, FileMode.Open, FileAccess.Read);
 
         ConnectionOptions connection = JsonSerializer.Deserialize<ConnectionOptions>(fileReader)
-            ?? throw new Exception($"File ({connectionPath}) doesn't contain the correct format for (ConnectionOptions)");
-
-
+            ?? throw new Exception($"File ({connPath}) doesn't contain the correct format for (ConnectionOptions)");
 
         TDatabase? Database;
         if (options == null) {
@@ -267,6 +262,7 @@ public class DatabaseUtils {
         } else {
             Database = (TDatabase?)Activator.CreateInstance(typeof(TDatabase), connection, options);
         }
-        return Database ?? throw new Exception($"Unable to create ({typeof(TDatabase).FullName}) instance with the ConnectionOptions[{connectionPath}]"); ;
+
+        return Database ?? throw new Exception($"Unable to create ({typeof(TDatabase).FullName}) instance with the ConnectionOptions[{connPath}]"); ;
     }
 }

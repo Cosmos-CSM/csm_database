@@ -33,7 +33,7 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
     : TestingDataHandlerBase
     where TEntity : class, IEntity, new()
     where TDepot : IDepot<TEntity>
-    where TDatabase : DatabaseBase<TDatabase> {
+    where TDatabase : DatabaseBase<TDatabase>, new() {
 
     /// <summary>
     ///     Depot instance to operate tests.
@@ -66,11 +66,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         : base(
             [
                 ..factories,
-                () => database?.Invoke() ?? DatabaseUtils.Q_Construct<TDatabase>(sign)
+                () => database?.Invoke() ?? DatabaseUtils.ActivateTestingDatabase<TDatabase>()
             ]
         ) {
 
-        Database = (TDatabase)(database?.Invoke() ?? DatabaseUtils.Q_Construct<TDatabase>(sign));
+        Database = (TDatabase)(database?.Invoke() ?? DatabaseUtils.ActivateTestingDatabase<TDatabase>());
         Depot = (TDepot)Activator.CreateInstance(typeof(TDepot), Database, null)!;
 
         PropertyInfo[] entityProperties = typeof(TEntity).GetProperties();
