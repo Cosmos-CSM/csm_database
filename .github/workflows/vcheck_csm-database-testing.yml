@@ -1,4 +1,4 @@
-name: (CSM Foundation Database Testing) Version Check
+name: Version Check [CSM Database Testing]
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - main
     types: [opened, synchronize]
     paths:
-      - 'CSM Foundation Database Testing/**'
+      - 'CSM Database Testing/**'
 
 jobs:
   check-version:
@@ -21,7 +21,7 @@ jobs:
       - name: Define project path
         id: config
         run: |
-          echo 'project_path="CSM Foundation Database Testing/CSM Foundation Database Testing.csproj"' >> $GITHUB_OUTPUT
+          echo 'project_path="CSM Database Testing/CSM Database Testing.csproj"' >> $GITHUB_OUTPUT
 
       - name: Get version from PR branch
         id: pr_version
