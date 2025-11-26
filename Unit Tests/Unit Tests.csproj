@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CSM Foundation Database\CSM Database Core.csproj" />
+    <ProjectReference Include="..\CSM Database Core\CSM Database Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
