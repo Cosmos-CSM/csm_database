@@ -62,7 +62,7 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
     /// <param name="database">
     ///     Main Entity <see cref="TEntity"/> database handler instance. If isn't given will use a default built instance.
     /// </param>
-    public TestingDepotBase(string sign, DatabaseFactory? database = null, params DatabaseFactory[] factories)
+    public TestingDepotBase(DatabaseFactory? database = null, params DatabaseFactory[] factories)
         : base(
             [
                 ..factories,
