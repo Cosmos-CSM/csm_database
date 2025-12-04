@@ -4,7 +4,6 @@ using System.Reflection;
 using CSM_Database_Core;
 using CSM_Database_Core.Core.Errors;
 using CSM_Database_Core.Core.Models;
-using CSM_Database_Core.Depots.Abstractions.Bases;
 using CSM_Database_Core.Depots.Abstractions.Interfaces;
 using CSM_Database_Core.Depots.Models;
 using CSM_Database_Core.Depots.ViewFilters;
@@ -29,10 +28,11 @@ namespace CSM_Database_Testing.Abstractions.Bases;
 /// <typeparam name="TDatabase">
 ///     [Database] that stores the <see cref="TEntity"/> data.
 /// </typeparam>
-public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
+public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatabase>
     : TestingDataHandlerBase
-    where TEntity : class, IEntity, new()
-    where TDepot : IDepot<TEntity>
+    where TEntityInterface : IEntity
+    where TEntity : class, TEntityInterface, new()
+    where TDepot : IDepot<TEntity, TEntityInterface>
     where TDatabase : DatabaseBase<TDatabase>, new() {
 
     /// <summary>
@@ -573,7 +573,7 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         const int viewPage = 1;
         await Store(30, EntityFactory);
 
-        ViewOutput<TEntity> viewOutput = await Depot.View(
+        ViewOutput<TEntityInterface> viewOutput = await Depot.View(
                 new QueryInput<TEntity, ViewInput<TEntity>> {
                     Parameters = new() {
                         Retroactive = false,
@@ -596,7 +596,7 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         const int viewPage = 2;
         await Store(30, EntityFactory);
 
-        ViewOutput<TEntity> viewOutput = await Depot.View(
+        ViewOutput<TEntityInterface> viewOutput = await Depot.View(
                 new QueryInput<TEntity, ViewInput<TEntity>> {
                     Parameters = new ViewInput<TEntity> {
                         Retroactive = false,
@@ -617,7 +617,7 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
     [Fact(DisplayName = $"[View]: Specific ordering by property")]
     public async Task ViewC() {
 
-        ViewOutput<TEntity> orderedViewOutput = await Depot.View(
+        ViewOutput<TEntityInterface> orderedViewOutput = await Depot.View(
                         new QueryInput<TEntity, ViewInput<TEntity>> {
                             Parameters = new() {
                                 Page = 1,
@@ -633,9 +633,8 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
                         }
                    );
 
-
         // --> Manual ordering undordered result for reference.
-        TEntity[] orderedReferenceRecords = [.. orderedViewOutput.Entities];
+        IEnumerable<TEntity> orderedReferenceRecords = orderedViewOutput.Entities.Cast<TEntity>();
         {
             Type setType = typeof(TEntity);
             ParameterExpression parameterExpression = Expression.Parameter(setType, $"X0");
@@ -649,9 +648,9 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
             orderedReferenceRecords = [.. sorted];
         }
 
-        for (int i = 0; i < orderedReferenceRecords.Length; i++) {
-            TEntity expected = orderedReferenceRecords[i];
-            TEntity actual = orderedViewOutput.Entities[i];
+        for (int i = 0; i < orderedReferenceRecords.Count(); i++) {
+            TEntity expected = orderedReferenceRecords.ElementAt(i);
+            TEntity actual = (TEntity)orderedViewOutput.Entities[i];
 
             Assert.Equal(Evaluable.GetValue(expected), Evaluable.GetValue(actual));
         }
@@ -659,7 +658,7 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
 
     [Fact(DisplayName = "[View]: Using Date filter")]
     public async Task ViewD() {
-        ViewOutput<TEntity> viewOutput = await Depot.View(
+        ViewOutput<TEntityInterface> viewOutput = await Depot.View(
                 new QueryInput<TEntity, ViewInput<TEntity>> {
                     Parameters = new() {
                         Page = 1,
@@ -690,7 +689,7 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         TEntity sampleEntity = Store(EntityFactory);
         object? sampleValue = Evaluable.GetValue(sampleEntity);
 
-        ViewOutput<TEntity> qOut = await Depot.View(
+        ViewOutput<TEntityInterface> qOut = await Depot.View(
                 new QueryInput<TEntity, ViewInput<TEntity>> {
                     Parameters = new() {
                         Retroactive = false,
@@ -735,7 +734,7 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
                 );
             possibleValues.Add(sampleValue);
         }
-        ViewOutput<TEntity> viewOutput = await Depot.View(
+        ViewOutput<TEntityInterface> viewOutput = await Depot.View(
                 new QueryInput<TEntity, ViewInput<TEntity>> {
                     Parameters = new() {
                         Retroactive = false,

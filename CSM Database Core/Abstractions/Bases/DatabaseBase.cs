@@ -65,14 +65,48 @@ public abstract partial class DatabaseBase<TDatabases>
         DatabaseOptions.ConnectionOptions ??= DatabaseUtils.GetConnectionOptions(Sign, DatabaseOptions.ForTesting);
     }
 
+    public bool Validate(bool strict = true) {
+        bool logsOn = DatabaseOptions.EnableLogging;
+
+        if (logsOn) {
+            ConsoleUtils.Announce(
+                    $"Setting up ORM",
+                    new() {
+                        { "Database", GetType()?.Namespace ?? "---" },
+                        { "Base", nameof(DatabaseBase<TDatabases>) }
+                    }
+                );
+        }
+
+        if (Database.CanConnect()) {
+            if (logsOn)
+                ConsoleUtils.Success($"[{GetType().FullName}] ORM Set");
+
+            IEnumerable<string> pendingMigrations = Database.GetPendingMigrations();
+            if (pendingMigrations.Any()) {
+
+                if(strict)
+                    throw new Exception($"ORM ({GetType().FullName}) has pending migrations ({pendingMigrations.Count()})");
+
+                return false;
+            }
+            return ValidateSetsDefinitions(strict);
+        }
+
+        try {
+            Database.OpenConnection();
+        } catch (Exception ex) {
+            throw new Exception($"Invalid connection with Database ({GetType().FullName}) | {ex.InnerException?.Message}");
+        }
+    }
+
     /// <summary>
-    ///     Validates if all the <see cref="Sets"/> <see cref="Type"/>s are <see cref="EntityBase"/> assuring contains the correct
-    ///     methods needed.
+    ///     Validates if all the <see cref="DbSet{TEntity}"/> are <see cref="EntityBase"/> assuring contains the correct methods needed.
     /// </summary>
     /// <returns>
-    ///     The strict validated collection of [<see cref="BBusinessDatabaseEntity"/>]s and [<see cref="BConnector{TSource, TTarget}"/>]s.
+    ///     Validated entity types to be handled.
     /// </returns>
-    protected EntityBase[] ValidateSets() {
+    protected EntityBase[] GetSetsDefinitions() {
         Type databaseType = GetType();
 
         List<EntityBase> entityModels = [];
@@ -105,52 +139,19 @@ public abstract partial class DatabaseBase<TDatabases>
         return [.. entityModels];
     }
 
-
-    public void ValidateHealth() {
-        bool logsOn = DatabaseOptions.EnableLogging;
-
-        if (logsOn) {
-            ConsoleUtils.Announce(
-                    $"Setting up ORM",
-                    new() {
-                                { "Database", GetType()?.Namespace ?? "---" },
-                                { "Base", nameof(DatabaseBase<TDatabases>) }
-                    }
-                );
-        }
-
-        if (Database.CanConnect()) {
-
-            if (logsOn)
-                ConsoleUtils.Success($"[{GetType().FullName}] ORM Set");
-
-            IEnumerable<string> pendingMigrations = Database.GetPendingMigrations();
-            if (pendingMigrations.Any()) {
-                throw new Exception($"ORM ({GetType().FullName}) has pending migrations ({pendingMigrations.Count()})");
-            }
-            Evaluate();
-        } else {
-            try {
-                Database.OpenConnection();
-            } catch (Exception ex) {
-                throw new Exception($"Invalid connection with Database ({GetType().FullName}) | {ex.InnerException?.Message}");
-            }
-        }
-    }
-
     /// <summary>
-    ///     Evaluates if <see cref="Sets"/> are correctly configured and translated to the internal framework handler.
+    ///     Evaluates if <see cref="DbSet{TEntity}"/> are correctly configured and translated to the internal framework handler.
     /// </summary>
-    public void Evaluate() {
+    public bool ValidateSetsDefinitions(bool strict = true) {
 
         bool logsOn = DatabaseOptions.EnableLogging;
-        EntityBase[] sets = ValidateSets();
+        EntityBase[] sets = GetSetsDefinitions();
 
         if (logsOn) {
             ConsoleUtils.Announce(
                 $"[{GetType().Name}] Validatig Sets...",
                 new() {
-                { "Count", sets.Length }
+                    { "Count", sets.Length }
                 }
             );
         }
@@ -160,7 +161,7 @@ public abstract partial class DatabaseBase<TDatabases>
             Exception[] result = set.EvaluateDefinition();
             if (result.Length > 0 && logsOn) {
                 ConsoleUtils.Warning(
-                    "Wrong [Set] definition",
+                    "Wrong [DbSet] definition",
                     new() {
                         { "Set", set.GetType().Name },
                         { "Exceptions", result },
@@ -172,10 +173,16 @@ public abstract partial class DatabaseBase<TDatabases>
         }
 
         if (evResults.Length > 0) {
-            throw new Exception("Database [Set] definition failures");
-        } else if (logsOn) {
-            ConsoleUtils.Success($"[{GetType().Name}] Set validation succeeded");
+            if (strict)
+                throw new Exception("Database [DbSet] definition failures");
+
+            return false;
         }
+
+        if (logsOn)
+            ConsoleUtils.Success($"[{GetType().Name}] Set validation succeeded");
+
+        return true;
     }
 
     protected virtual void DesignEntity(EntityBase Entity, EntityTypeBuilder mBuilder) { }
@@ -232,7 +239,7 @@ public abstract partial class DatabaseBase<TDatabases>
             }
         }
 
-        EntityBase[] sets = ValidateSets();
+        EntityBase[] sets = GetSetsDefinitions();
 
         foreach (EntityBase entity in sets) {
             Type setType = entity.GetType();
@@ -283,10 +290,6 @@ public abstract partial class DatabaseBase<TDatabases>
         }
 
         base.OnModelCreating(mBuilder);
-    }
-
-    public bool Validate(bool strict = true) {
-        throw new NotImplementedException();
     }
 
     #endregion

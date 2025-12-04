@@ -1,8 +1,8 @@
 ﻿using System.Data;
-using System.Linq.Expressions;
 using System.Reflection;
 
 using CSM_Database_Core.Core.Errors;
+using CSM_Database_Core.Core.Extensions;
 using CSM_Database_Core.Core.Utils;
 using CSM_Database_Core.Depots.Abstractions.Interfaces;
 using CSM_Database_Core.Depots.Models;
@@ -23,10 +23,11 @@ namespace CSM_Database_Core.Depots.Abstractions.Bases;
 /// <typeparam name="TEntity">
 ///     Type of the depot entity handled.
 /// </typeparam>>
-public abstract class DepotBase<TDatabase, TEntity>
-    : IDepot<TEntity>
+public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
+    : IDepot<TEntity, TEntityInterface>
     where TDatabase : DatabaseBase<TDatabase>
-    where TEntity : class, IEntity, new() {
+    where TEntity : class, TEntityInterface, new()
+    where TEntityInterface : IEntity {
 
     /// <summary>
     ///     System data disposition manager.
@@ -108,160 +109,6 @@ public abstract class DepotBase<TDatabase, TEntity>
 
     }
 
-    /// <summary>
-    ///     Processes the source enitty query over the complex pre processors validation and applying the custom querying process from each
-    ///     method implementation, after that returns the fully processed query.
-    /// </summary>
-    /// <param name="input">
-    ///     Query input parameters.
-    /// </param>
-    /// <param name="process">
-    ///     Method scope query process.
-    /// </param>
-    /// <returns></returns>
-    protected IQueryable<TEntity> ProcessQuery<TParameters>(QueryInput<TEntity, TParameters> input, Func<IQueryable<TEntity>, IQueryable<TEntity>> process) {
-        IQueryable<TEntity> query = _dbSet;
-
-
-        if (input.PreProcessor != null) {
-            query = input.PreProcessor(query);
-        }
-
-        query = process(query);
-
-        if (input.PostProcessor != null) {
-            query = input.PostProcessor(query);
-        }
-
-        return query;
-    }
-
-    /// <summary>
-    ///     Applies the given <paramref name="filters"/> to the given <paramref name="query"/>.
-    /// </summary>
-    /// <param name="query">
-    ///     Query object.
-    /// </param>
-    /// <param name="filters">
-    ///     Filters specifications to apply.
-    /// </param>
-    /// <returns>
-    ///     The filtered calculated 
-    /// </returns>
-    protected IQueryable<TEntity> FilterQuery(IQueryable<TEntity> query, IViewFilterNode<TEntity>[] filters) {
-        if (filters.Length > 0) {
-            var orderedFilters = filters.OrderBy(
-                    (filter) => filter.Order
-                );
-
-            foreach (IViewFilterNode<TEntity> filter in orderedFilters) {
-                Expression<Func<TEntity, bool>> queryExpression = filter.Compose();
-                query = query.Where(queryExpression);
-            }
-        }
-
-        return query;
-    }
-
-    /// <summary>
-    ///     Applies and calculates pagination values to the given <paramref name="query"/>.
-    /// </summary>
-    /// <param name="query">
-    ///     Query object.
-    /// </param>
-    /// <param name="page">
-    ///     The page requested to get the items.
-    /// </param>
-    /// <param name="range">
-    ///     The range of items per page to calculate.
-    /// </param>
-    /// <param name="export">
-    ///     Wheter the current calculation is for an Exportable View.
-    /// </param>
-    /// <returns>
-    ///     The pagination operation result information.
-    /// </returns>
-    protected async Task<PaginationOutput<TEntity>> PaginateQuery(IQueryable<TEntity> query, int page, int range, bool export = false) {
-        int entitiesCount = await query.CountAsync();
-        if (export) {
-
-            return new PaginationOutput<TEntity> {
-                Query = query,
-                PagesCount = 1,
-                EntitiesCount = entitiesCount,
-            };
-        }
-
-        (int pages, int remainder) = Math.DivRem(entitiesCount, range);
-        if (remainder > 0) {
-            pages++;
-        }
-
-        int paginationStart = range * (page - 1);
-        int paginationEnd = page == pages ? remainder == 0 ? range : remainder : range;
-        query = query
-            .AsNoTracking()
-            .Skip(paginationStart)
-            .Take(paginationEnd);
-
-        return new PaginationOutput<TEntity> {
-            Query = query,
-            PagesCount = pages,
-            EntitiesCount = entitiesCount,
-        };
-    }
-
-    /// <summary>
-    ///     Applies the given <paramref name="orderings"/> to the given <paramref name="query"/>.
-    /// </summary>
-    /// <param name="query">
-    ///     Query object.
-    /// </param>
-    /// <param name="orderings">
-    ///     Options to apply ordering to the given <paramref name="query"/>.
-    /// </param>
-    /// <returns>
-    ///     An ordered and calculated query object.
-    /// </returns>
-    /// <exception cref="TypeAccessException">
-    ///     When a given <see cref="ViewOrdering"/> has configured a wrong property that doesn't exist in the main <see cref="IEntity"/> declaration.
-    /// </exception>
-    protected IQueryable<TEntity> OrderQuery(IQueryable<TEntity> query, ViewOrdering[] orderings) {
-        int orderingsCount = orderings.Length;
-        if (orderingsCount <= 0) {
-            return query;
-        }
-
-        Type entityDeclarationType = typeof(TEntity);
-        IOrderedQueryable<TEntity> orderingQuery = default!;
-        for (int orderingsIteration = 0; orderingsIteration < orderingsCount; orderingsIteration++) {
-            ParameterExpression parameterExpression = Expression.Parameter(entityDeclarationType, $"X{orderingsIteration}");
-            ViewOrdering ordering = orderings[orderingsIteration];
-
-            PropertyInfo property = entityDeclarationType.GetProperty(ordering.Property)
-                ?? throw new TypeAccessException($"Unexist property ({ordering.Property}) on ({entityDeclarationType})");
-
-            MemberExpression memberExpression = Expression.MakeMemberAccess(parameterExpression, property);
-            UnaryExpression translationExpression = Expression.Convert(memberExpression, typeof(object));
-            Expression<Func<TEntity, object>> orderingExpression = Expression.Lambda<Func<TEntity, object>>(translationExpression, parameterExpression);
-            if (orderingsIteration == 0) {
-                orderingQuery = ordering.Ordering switch {
-                    ViewOrderings.Ascending => query.OrderBy(orderingExpression),
-                    ViewOrderings.Descending => query.OrderByDescending(orderingExpression),
-                    _ => query.OrderBy(orderingExpression),
-                };
-                continue;
-            }
-
-            orderingQuery = ordering.Ordering switch {
-                ViewOrderings.Ascending => orderingQuery.ThenBy(orderingExpression),
-                ViewOrderings.Descending => orderingQuery.ThenByDescending(orderingExpression),
-                _ => orderingQuery.ThenBy(orderingExpression),
-            };
-        }
-        return orderingQuery;
-    }
-
     protected TEntity2 ValidateDependency<TEntity2>(TEntity2 dependencyEntity)
         where TEntity2 : class, IEntity, new() {
 
@@ -279,23 +126,23 @@ public abstract class DepotBase<TDatabase, TEntity>
 
     #region View 
 
-    public async Task<ViewOutput<TEntity>> View(QueryInput<TEntity, ViewInput<TEntity>> input) {
+    public async Task<ViewOutput<TEntityInterface>> View(QueryInput<TEntity, ViewInput<TEntity>> input) {
         ViewInput<TEntity> parameters = input.Parameters;
 
-        IQueryable<TEntity> processedQuery = ProcessQuery(
+        IQueryable<TEntity> processedQuery = _dbSet.Process(
                 input,
                 (query) => {
-                    processedQuery = OrderQuery(query, parameters.Orderings);
-                    processedQuery = FilterQuery(processedQuery, parameters.Filters);
+                    processedQuery = query.OrderView(parameters.Orderings);
+                    processedQuery = processedQuery.FilterView(parameters.Filters);
 
                     return processedQuery;
                 }
             );
 
 
-        PaginationOutput<TEntity> paginationOutput = await PaginateQuery(processedQuery, parameters.Page, parameters.Range, parameters.Export);
+        PaginationOutput<TEntity> paginationOutput = await processedQuery.PaginateView(parameters.Page, parameters.Range, parameters.Export);
 
-        return new ViewOutput<TEntity>() {
+        return new ViewOutput<TEntityInterface>() {
             Page = parameters.Page,
             Pages = paginationOutput.PagesCount,
             Count = paginationOutput.EntitiesCount,
@@ -423,7 +270,7 @@ public abstract class DepotBase<TDatabase, TEntity>
     public async Task<BatchOperationOutput<TEntity>> Read(QueryInput<TEntity, FilterQueryInput<TEntity>> input) {
         FilterQueryInput<TEntity> parameters = input.Parameters;
 
-        IQueryable<TEntity> processedQuery = ProcessQuery(
+        IQueryable<TEntity> processedQuery = _dbSet.Process(
                 input,
                 sourceQuery => {
                     sourceQuery = _dbSet.Where(parameters.Filter);
@@ -543,7 +390,7 @@ public abstract class DepotBase<TDatabase, TEntity>
     public async Task<UpdateOutput<TEntity>> Update(QueryInput<TEntity, UpdateInput<TEntity>> input) {
         UpdateInput<TEntity> parameters = input.Parameters;
 
-        IQueryable<TEntity> processedQuery = ProcessQuery(
+        IQueryable<TEntity> processedQuery = _dbSet.Process(
                 input,
                 (sourceQuery) => sourceQuery
             );
@@ -654,7 +501,7 @@ public abstract class DepotBase<TDatabase, TEntity>
     public async Task<BatchOperationOutput<TEntity>> Delete(QueryInput<TEntity, FilterQueryInput<TEntity>> input) {
         FilterQueryInput<TEntity> parameters = input.Parameters;
 
-        IQueryable<TEntity> query = ProcessQuery(
+        IQueryable<TEntity> query = _dbSet.Process(
                 input,
                 (query) => {
                     return query

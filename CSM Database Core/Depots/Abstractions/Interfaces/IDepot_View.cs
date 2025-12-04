@@ -7,14 +7,15 @@ namespace CSM_Database_Core.Depots.Abstractions.Interfaces;
 ///     behave, providing {View} operations, a View operation is the creation of complex 
 ///     indexed, paged and handled TableViews based on the data.
 /// </summary>
-/// <typeparam name="T">
+/// <typeparam name="TEntity">
 ///     [Entity] type handling of the implementation.
 /// </typeparam>
-public interface IDepot_View<T>
-    where T : class, IEntity {
+public interface IDepot_View<TEntity, TEntityInterface>
+    where TEntity : class, TEntityInterface
+    where TEntityInterface : IEntity {
 
     /// <summary>
-    ///     Provides a table view of <see cref="T"/> calculated based on the given <paramref name="Options"/>.
+    ///     Provides a table view of <see cref="TEntity"/> calculated based on the given <paramref name="Options"/>.
     ///     
     ///     Standard calculation mode:
     ///     
@@ -36,5 +37,5 @@ public interface IDepot_View<T>
     /// <returns> 
     ///     The final View resolutions, giving metadata related to the created View and records resolved 
     /// </returns>
-    Task<ViewOutput<T>> View(QueryInput<T, ViewInput<T>> input);
+    Task<ViewOutput<TEntityInterface>> View(QueryInput<TEntity, ViewInput<TEntity>> input);
 }
