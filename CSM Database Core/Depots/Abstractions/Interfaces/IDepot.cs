@@ -22,11 +22,10 @@ public delegate IQueryable<TEntity> QueryProcessor<TEntity>(IQueryable<TEntity> 
 /// <typeparam name="TEntity">
 ///     Type of the depot entity handled.
 /// </typeparam>
-public interface IDepot<TEntity, TEntityInterface>
-    : IDepot_View<TEntity, TEntityInterface>
+public interface IDepot<TEntity>
+    : IDepot_View<TEntity>
     , IDepot_Read<TEntity>
     , IDepot_Create<TEntity>
     , IDepot_Update<TEntity>
     , IDepot_Delete<TEntity>
-    where TEntity : class, TEntityInterface
-    where TEntityInterface : IEntity { }
+    where TEntity : class, IEntity { }

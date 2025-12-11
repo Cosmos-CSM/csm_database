@@ -95,8 +95,13 @@ public abstract partial class DatabaseBase<TDatabases>
 
         try {
             Database.OpenConnection();
+            return true;
         } catch (Exception ex) {
-            throw new Exception($"Invalid connection with Database ({GetType().FullName}) | {ex.InnerException?.Message}");
+
+            if(strict)
+                throw new Exception($"Invalid connection with Database ({GetType().FullName}) | {ex.InnerException?.Message}");
+
+            return false;
         }
     }
 

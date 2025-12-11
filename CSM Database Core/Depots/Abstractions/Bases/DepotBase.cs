@@ -23,11 +23,10 @@ namespace CSM_Database_Core.Depots.Abstractions.Bases;
 /// <typeparam name="TEntity">
 ///     Type of the depot entity handled.
 /// </typeparam>>
-public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
-    : IDepot<TEntity, TEntityInterface>
+public abstract class DepotBase<TDatabase, TEntity>
+    : IDepot<TEntity>
     where TDatabase : DatabaseBase<TDatabase>
-    where TEntity : class, TEntityInterface, new()
-    where TEntityInterface : IEntity {
+    where TEntity : class, IEntity, new() {
 
     /// <summary>
     ///     System data disposition manager.
@@ -126,7 +125,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
 
     #region View 
 
-    public async Task<ViewOutput<TEntityInterface>> View(QueryInput<TEntity, ViewInput<TEntity>> input) {
+    public async Task<ViewOutput<TEntity>> View(QueryInput<TEntity, ViewInput<TEntity>> input) {
         ViewInput<TEntity> parameters = input.Parameters;
 
         IQueryable<TEntity> processedQuery = _dbSet.Process(
@@ -142,7 +141,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
 
         PaginationOutput<TEntity> paginationOutput = await processedQuery.PaginateView(parameters.Page, parameters.Range, parameters.Export);
 
-        return new ViewOutput<TEntityInterface>() {
+        return new ViewOutput<TEntity>() {
             Page = parameters.Page,
             Pages = paginationOutput.PagesCount,
             Count = paginationOutput.EntitiesCount,

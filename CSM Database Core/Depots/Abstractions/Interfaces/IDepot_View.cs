@@ -10,9 +10,8 @@ namespace CSM_Database_Core.Depots.Abstractions.Interfaces;
 /// <typeparam name="TEntity">
 ///     [Entity] type handling of the implementation.
 /// </typeparam>
-public interface IDepot_View<TEntity, TEntityInterface>
-    where TEntity : class, TEntityInterface
-    where TEntityInterface : IEntity {
+public interface IDepot_View<TEntity>
+    where TEntity : class, IEntity {
 
     /// <summary>
     ///     Provides a table view of <see cref="TEntity"/> calculated based on the given <paramref name="Options"/>.
@@ -37,5 +36,5 @@ public interface IDepot_View<TEntity, TEntityInterface>
     /// <returns> 
     ///     The final View resolutions, giving metadata related to the created View and records resolved 
     /// </returns>
-    Task<ViewOutput<TEntityInterface>> View(QueryInput<TEntity, ViewInput<TEntity>> input);
+    Task<ViewOutput<TEntity>> View(QueryInput<TEntity, ViewInput<TEntity>> input);
 }
