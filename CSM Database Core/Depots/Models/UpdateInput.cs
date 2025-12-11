@@ -9,7 +9,7 @@ namespace CSM_Database_Core.Depots.Models;
 ///     Type of the <see cref="IEntity"/> to update.
 /// </typeparam>
 public record UpdateInput<TEntity>
-    where TEntity : class, IEntity {
+    where TEntity : IEntity {
 
     /// <summary>
     ///     [Entity] to update.

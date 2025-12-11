@@ -1,5 +1,4 @@
 ﻿using CSM_Database_Core.Core.Errors;
-using CSM_Database_Core.Entities.Abstractions.Bases;
 using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
 namespace CSM_Database_Core.Depots.Models;
@@ -7,21 +6,21 @@ namespace CSM_Database_Core.Depots.Models;
 /// <summary>
 ///     [Record] that stores the information about a batch operation output result.
 /// </summary>
-/// <typeparam name="T">
+/// <typeparam name="TEntity">
 ///     Type of the <see cref="IEntity"/> affected by the operations.
 /// </typeparam>
-public record BatchOperationOutput<T>
-    where T : class, IEntity {
+public record BatchOperationOutput<TEntity>
+    where TEntity : IEntity {
 
     /// <summary>
     ///     Collection of batch operation successes.
     /// </summary>
-    public T[] Successes { get; init; }
+    public TEntity[] Successes { get; init; }
 
     /// <summary>
     ///     Collection of batch operation failures. 
     /// </summary>
-    public EntityError<T>[] Failures { get; init; }
+    public EntityError<TEntity>[] Failures { get; init; }
 
     /// <summary>
     ///     Whether at least one operation iteration has failed.
@@ -48,7 +47,7 @@ public record BatchOperationOutput<T>
     /// </summary>
     public int SuccessesCount { get; private set; }
 
-    public BatchOperationOutput(T[] Successes, EntityError<T>[] Failures) {
+    public BatchOperationOutput(TEntity[] Successes, EntityError<TEntity>[] Failures) {
         this.Successes = Successes;
         this.Failures = Failures;
 

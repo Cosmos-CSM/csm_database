@@ -1,5 +1,4 @@
 ﻿using CSM_Database_Core.Depots.Abstractions.Interfaces;
-using CSM_Database_Core.Entities.Abstractions.Bases;
 using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
 namespace CSM_Database_Core.Depots.Models;
@@ -8,8 +7,8 @@ namespace CSM_Database_Core.Depots.Models;
 ///     [Record] for specific <see cref="IDepot{TEntity}"/> operations,
 ///     is a required parameters for operations related with database data management.
 /// </summary>
-public record QueryInput<TEntity, TParameters>
-    where TEntity : class, IEntity {
+public record QueryInput<TEntityInterface, TParameters>
+    where TEntityInterface : IEntity {
 
     /// <summary>
     ///    Custom operation scope input parameters information.
@@ -19,10 +18,10 @@ public record QueryInput<TEntity, TParameters>
     /// <summary>
     ///     Custom query process to apply before the operation commit.
     /// </summary>
-    public QueryProcessor<TEntity>? PreProcessor { get; set; }
+    public QueryProcessor<TEntityInterface>? PreProcessor { get; set; }
 
     /// <summary>
     ///     Custom query process to apply after the operation commit.
     /// </summary>
-    public QueryProcessor<TEntity>? PostProcessor { get; set; }
+    public QueryProcessor<TEntityInterface>? PostProcessor { get; set; }
 }

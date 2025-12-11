@@ -1,5 +1,4 @@
-﻿using CSM_Database_Core.Entities.Abstractions.Bases;
-using CSM_Database_Core.Entities.Abstractions.Interfaces;
+﻿using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
 namespace CSM_Database_Core.Depots.Models;
 
@@ -15,7 +14,7 @@ namespace CSM_Database_Core.Depots.Models;
 ///     Type of the  <see cref="IEntity"/> query based the pagination operation was applied to.
 /// </typeparam>
 public record PaginationOutput<TEntity>()
-    where TEntity : class, IEntity {
+    where TEntity : IEntity {
 
     /// <summary>
     ///     The total count of available pages.

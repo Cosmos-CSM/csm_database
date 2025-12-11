@@ -27,7 +27,7 @@ public enum FilteringBehaviors {
 ///     {model} implementation to store input data to query based on filtering.
 /// </summary>
 public record FilterQueryInput<TEntity>
-    where TEntity : class, IEntity {
+    where TEntity : IEntity {
 
     /// <summary>
     ///     How the query result match should fetch the actual results.

@@ -53,6 +53,6 @@ public abstract class TestingDatabaseBase<TDatabase>
 
     [Fact]
     public void Evaluate() {
-        _database.ValidateSetsDefinitions();
+        _database.Validate();
     }
 }

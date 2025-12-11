@@ -175,7 +175,7 @@ public static class IQueryableExtension {
     ///     A fully bootstrapped processed query object.
     /// </returns>
     public static IQueryable<TEntity> Process<TEntity, TParameters>(this IQueryable<TEntity> query, QueryInput<TEntity, TParameters> input, Func<IQueryable<TEntity>, IQueryable<TEntity>> process)
-        where TEntity : class, IEntity {
+        where TEntity : IEntity {
 
         if (input.PreProcessor != null) {
             query = input.PreProcessor(query);

@@ -68,7 +68,7 @@ public class DatabaseUtils {
     /// <exception cref="FileNotFoundException"/>
     /// <exception cref="Exception"/>
     public static ConnectionOptions GetConnectionOptions(string sign, bool forTesting = false) {
-        
+
         if (forTesting) {
             return GetTestingConnectionOptions(sign);
         }
@@ -244,5 +244,70 @@ public class DatabaseUtils {
             }
         }
         return entity;
+    }
+
+    /// <summary>
+    ///     Sanitizes an update entity operation.
+    /// </summary>
+    /// <param name="database">
+    ///     Database context.
+    /// </param>
+    /// <param name="original"> 
+    ///     Current stored entity data.
+    /// </param>
+    /// <param name="new">
+    ///     New entity data to overwrite.
+    /// </param>
+    public static void SanitizeUpdateEntity(DbContext database, IEntity original, IEntity @new) {
+        EntityEntry previousEntry = database.Entry(original);
+        if (previousEntry.State == EntityState.Unchanged) {
+            // Update the non-navigation properties.
+            previousEntry.CurrentValues.SetValues(@new);
+            foreach (NavigationEntry navigation in previousEntry.Navigations) {
+                object? newNavigationValue = database.Entry(@new).Navigation(navigation.Metadata.Name).CurrentValue;
+                // Validate if navigation is a collection.
+                if (navigation.CurrentValue is IEnumerable<object> previousCollection && newNavigationValue is IEnumerable<object> newCollection) {
+                    List<object> previousList = [.. previousCollection];
+                    List<object> newList = [.. newCollection];
+                    // Perform a search for new items to add in the collection.
+                    // NOTE: the followings iterations must be performed in diferent code segments to avoid index length conflicts.
+                    for (int i = 0; i < newList.Count; i++) {
+                        IEntity? newItemSet = (IEntity)newList[i];
+                        if (newItemSet != null && newItemSet.Id <= 0) {
+                            // Getting the item type to add.
+                            Type itemType = newItemSet.GetType();
+                            // Getting the Add method from Icollection.
+                            MethodInfo? addMethod = previousCollection.GetType().GetMethod("Add", [itemType]);
+                            // Adding the new item to Icollection.
+                            _ = (addMethod?.Invoke(previousCollection, [newItemSet]));
+
+                        }
+                    }
+                    // Find items to modify.
+                    for (int i = 0; i < previousList.Count; i++) {
+                        // For each new item stored in overwritten collection, will search for an ID match and update the overwritten.
+                        foreach (object newitem in newList) {
+                            if (previousList[i] is IEntity previousItem && newitem is IEntity newItemSet && previousItem.Id == newItemSet.Id) {
+                                SanitizeUpdateEntity(database, previousItem, newItemSet);
+                            }
+                        }
+                    }
+                } else if (navigation.CurrentValue == null && newNavigationValue != null) {
+                    // Create a new navigation overwritten.
+                    // Also update the attached navigators.
+                    //AttachDate(newNavigationValue);
+                    EntityEntry newNavigationEntry = database.Entry(newNavigationValue);
+                    newNavigationEntry.State = EntityState.Added;
+                    navigation.CurrentValue = newNavigationValue;
+                } else if (navigation.CurrentValue != null && newNavigationValue != null) {
+                    // Update the existing navigation overwritten
+                    if (navigation.CurrentValue is IEntity currentItemSet && newNavigationValue is IEntity newItemSet) {
+                        SanitizeUpdateEntity(database, currentItemSet, newItemSet);
+                    }
+                }
+
+            }
+        }
+
     }
 }

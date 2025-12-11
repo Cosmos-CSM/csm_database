@@ -1,18 +1,15 @@
 ﻿using System.Data;
-using System.Reflection;
 
 using CSM_Database_Core.Core.Errors;
 using CSM_Database_Core.Core.Extensions;
 using CSM_Database_Core.Core.Utils;
 using CSM_Database_Core.Depots.Abstractions.Interfaces;
 using CSM_Database_Core.Depots.Models;
-using CSM_Database_Core.Entities.Abstractions.Bases;
 using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
 using CSM_Foundation_Core.Abstractions.Interfaces;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace CSM_Database_Core.Depots.Abstractions.Bases;
 
@@ -56,88 +53,46 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
         _dbSet = Database.Set<TEntity>();
     }
 
-    #region (Private / Protected) Functions / Methods
-
-
     /// <summary>
-    /// Stores the specified entity and its nested entities in the database.
+    ///     Validates that the given <paramref name="relation"/> is already created and valid in the system.
     /// </summary>
-    /// <remarks>This method processes the specified entity and its nested entities, adding them to the
-    /// database. The method ensures that nested entities are stored in the correct order to maintain referential integrity.</remarks>
-    /// <param name="common">The root entity to be stored. Nested entities within this entity will also be processed and stored.</param>
-    /// <param name="save">A boolean value indicating whether to immediately save changes to the database. <see langword="true"/> to save
-    /// changes after storing the entities; otherwise, <see langword="false"/>.</param>
-    public async Task<TEntity> Store(TEntity root, bool save = false) {
-        HashSet<IEntity> entitiesToAdd = [];
+    /// <typeparam name="TRelationEntity">
+    ///     Type of the relation entity to validate.
+    /// </typeparam>
+    /// <param name="relation">
+    ///     Relation entity instance to validate.
+    /// </param>
+    /// <returns>
+    ///     The instance when is valid, otherwise throws exception.
+    /// </returns>
+    /// <exception cref="Exception"></exception>
+    protected TRelationEntity ValidateRelation<TRelationEntity>(TRelationEntity relation)
+        where TRelationEntity : class, IEntity, new() {
 
-        StoreNestedEntities(root, entitiesToAdd);
-
-        foreach (IEntity entity in entitiesToAdd.Reverse()) {
-            if (entity.Id == 0) {
-                _db.Add(entity);
-                _disposer?.Push(entity);
-            }
-        }
-
-        if (save) await _db.SaveChangesAsync();
-
-        return root;
-    }
-
-    /// <summary>
-    /// Recurses through the nested entities of a common entity and stores them in a hash set to avoid duplicates.
-    /// </summary>
-    /// <param name="entity">Current entity to process and store.</param>
-    /// <param name="entitiesHash">List of stored entities. The content is verified to avoid duplications. </param>
-    static void StoreNestedEntities(IEntity entity, HashSet<IEntity> entitiesHash) {
-
-        if (entity == null || entitiesHash.Contains(entity)) return;
-        entitiesHash.Add(entity);
-
-        Type type = entity.GetType();
-        foreach (PropertyInfo prop in type.GetProperties()) {
-            var value = prop.GetValue(entity);
-
-            if (value is IEntity nestedEntity) {
-                StoreNestedEntities(nestedEntity, entitiesHash);
-            } else if (value is IEnumerable<IEntity> collection) {
-                foreach (var item in collection) {
-                    StoreNestedEntities(item, entitiesHash);
-                }
-            }
-        }
-
-    }
-
-    protected TEntity2 ValidateDependency<TEntity2>(TEntity2 dependencyEntity)
-        where TEntity2 : class, IEntity, new() {
-
-        TEntity2? tmpDependency = dependencyEntity;
-        tmpDependency = tmpDependency.Id > 0
-            ? _db.Set<TEntity2>().Where(dep => dep.Id == tmpDependency.Id).FirstOrDefault()
+        TRelationEntity? tmpRelation = relation;
+        tmpRelation = tmpRelation.Id > 0
+            ? _db.Set<TRelationEntity>().Where(dep => dep.Id == tmpRelation.Id).FirstOrDefault()
             : throw new Exception($"Dependencies aren't allowed to be auto-created on main Entity creation, you need to create the Dependency first in its corresponding [Depot]");
 
-        return tmpDependency is null
-            ? throw new Exception($"[{GetType().Name}] entity requires [{typeof(TEntity2)}] dependency")
-            : tmpDependency;
+        return tmpRelation is null
+            ? throw new Exception($"[{GetType().Name}] entity requires [{typeof(TRelationEntity)}] dependency")
+            : tmpRelation;
     }
-
-    #endregion
 
     #region View 
 
-    public async Task<ViewOutput<TEntityInterface>> View(QueryInput<TEntity, ViewInput<TEntity>> input) {
-        ViewInput<TEntity> parameters = input.Parameters;
+    public virtual async Task<ViewOutput<TEntityInterface>> View(QueryInput<TEntityInterface, ViewInput<TEntityInterface>> input) {
+        ViewInput<TEntityInterface> parameters = input.Parameters;
 
         IQueryable<TEntity> processedQuery = _dbSet.Process(
                 input,
                 (query) => {
-                    processedQuery = query.OrderView(parameters.Orderings);
-                    processedQuery = processedQuery.FilterView(parameters.Filters);
+                    processedQuery = query.OrderView(parameters.Orderings).Cast<TEntity>();
+                    processedQuery = processedQuery.FilterView(parameters.Filters).Cast<TEntity>();
 
                     return processedQuery;
                 }
-            );
+            ).Cast<TEntity>();
 
 
         PaginationOutput<TEntity> paginationOutput = await processedQuery.PaginateView(parameters.Page, parameters.Range, parameters.Export);
@@ -154,84 +109,49 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
 
     #region Create
 
-    /// <summary>
-    ///     Creates a new overwritten into the dataDatabases.
-    /// </summary>
-    /// <param name="entity">
-    ///     <see cref="TEntity"/> to store.
-    /// </param>
-    /// <returns> 
-    ///     The stored object. (Object Id is always auto-generated)
-    /// </returns>
-    public virtual async Task<TEntity> Create(TEntity entity) {
-        entity.Timestamp = DateTime.UtcNow;
-        entity.EvaluateWrite();
+    public virtual async Task<TEntityInterface> Create(TEntityInterface entity) {
+        TEntity instEntity = (TEntity)entity;
 
-        entity = DatabaseUtils.SanitizeEntity(_db, entity);
-        await _dbSet.AddAsync(entity);
+        instEntity.Timestamp = DateTime.UtcNow;
+        instEntity.EvaluateWrite();
 
-        _disposer?.Push(entity);
+        instEntity = DatabaseUtils.SanitizeEntity(_db, instEntity);
+        await _dbSet.AddAsync(instEntity);
+
+        _disposer?.Push(instEntity);
         await _db.SaveChangesAsync();
 
-        return entity;
+        return instEntity;
     }
 
+    public virtual async Task<BatchOperationOutput<TEntityInterface>> Create(ICollection<TEntityInterface> entities, bool sync = false) {
+        IEnumerable<TEntity> instEntities = entities.Cast<TEntity>();
 
-    /// <summary>
-    ///     Creates a collection of records into the dataDatabases. 
-    ///     <br>
-    ///         Depending on <paramref name="sync"/> the transaction performs different,
-    ///         the operation iterates the desire collection to store and collects all the 
-    ///         failures gathered during the operation.
-    ///     </br>
-    /// </summary>
-    /// <param name="entities">
-    ///     The collection to store.
-    /// </param>
-    /// <param name="sync">
-    ///     Determines if the transaction should be broken at the first failure catched. This means that
-    ///     the previous successfully stored objects will be kept as stored but the next ones objects desired
-    ///     to be stored won't continue, the operation will throw new exception.
-    /// </param>
-    /// <returns>
-    ///     A <see cref="EntityBatchOut{TSet}"/> that stores a collection of failures, and successes caught.
-    /// </returns>
-    public virtual async Task<BatchOperationOutput<TEntity>> Create(ICollection<TEntity> entities, bool sync = false) {
-        TEntity[] attached = [];
-        EntityError<TEntity>[] failures = [];
+        TEntity[] createdEntities = [];
+        EntityError<TEntityInterface>[] errors = [];
 
-        foreach (TEntity entity in entities) {
+        foreach (TEntity instEntity in instEntities) {
             try {
-                TEntity attachedEntity = await Create(entity);
-                attached = [.. attached, attachedEntity];
+                TEntityInterface attachedEntity = await Create(instEntity);
+                createdEntities = [.. createdEntities, (TEntity)attachedEntity];
             } catch (Exception excep) {
                 if (sync) {
                     throw;
                 }
 
-                EntityError<TEntity> fail = new(EntityErrorEvents.CREATE_FAILED, entity, excep);
-                failures = [.. failures, fail];
+                EntityError<TEntityInterface> error = new(EntityErrorEvents.CREATE_FAILED, instEntity, excep);
+                errors = [.. errors, error];
             }
         }
-        _db.SaveChanges();
-        return new(attached, failures);
+
+        return new(createdEntities, errors);
     }
 
     #endregion
 
     #region Read
 
-    /// <summary>
-    ///     Reads into the <see cref="TEntity"/> database [Entity] for matched records.
-    /// </summary>
-    /// <param name="id">
-    ///     Identifier of the desired <typeparamref name="TEntity"/>.
-    /// </param>
-    /// <returns> <see cref="TEntity"/> insatcne found </returns>
-    /// <exeption cref="XDepot">
-    ///     Thrown when the <see cref="TEntity"/> couldn't be found.
-    /// </exeption>
-    public async Task<TEntity> Read(long id) {
+    public async Task<TEntityInterface> Read(long id) {
         TEntity? entity = await _dbSet.Where(
                 e => e.Id == id
             )
@@ -242,18 +162,19 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
         return entity;
     }
 
-    public async Task<BatchOperationOutput<TEntity>> Read(long[] ids) {
+    public async Task<BatchOperationOutput<TEntityInterface>> Read(long[] ids) {
 
-        List<TEntity> successes = [];
-        List<EntityError<TEntity>> failures = [];
+        List<TEntity> readings = [];
+        List<EntityError<TEntityInterface>> errors = [];
+
         foreach (long id in ids) {
 
             try {
-                TEntity success = await Read(id);
-                successes.Add(success);
+                TEntity success = (TEntity)await Read(id);
+                readings.Add(success);
             } catch (Exception ex) {
-                failures.Add(
-                        new EntityError<TEntity>(
+                errors.Add(
+                        new EntityError<TEntityInterface>(
                                 EntityErrorEvents.READ_FAILED,
                                 new TEntity {
                                     Id = id
@@ -264,11 +185,11 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
             }
         }
 
-        return new BatchOperationOutput<TEntity>([.. successes], [.. failures]);
+        return new BatchOperationOutput<TEntityInterface>([.. readings], [.. errors]);
     }
 
-    public async Task<BatchOperationOutput<TEntity>> Read(QueryInput<TEntity, FilterQueryInput<TEntity>> input) {
-        FilterQueryInput<TEntity> parameters = input.Parameters;
+    public async Task<BatchOperationOutput<TEntityInterface>> Read(QueryInput<TEntityInterface, FilterQueryInput<TEntityInterface>> input) {
+        FilterQueryInput<TEntityInterface> parameters = input.Parameters;
 
         IQueryable<TEntity> processedQuery = _dbSet.Process(
                 input,
@@ -276,10 +197,11 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
                     sourceQuery = _dbSet.Where(parameters.Filter);
                     return sourceQuery;
                 }
-            );
+            )
+            .Cast<TEntity>();
 
         if (!processedQuery.Any()) {
-            return new BatchOperationOutput<TEntity>([], []);
+            return new BatchOperationOutput<TEntityInterface>([], []);
         }
 
         TEntity[] resultItems = parameters.Behavior switch {
@@ -290,24 +212,24 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
         };
 
         List<TEntity> successes = [];
-        List<EntityError<TEntity>> failures = [];
+        List<EntityError<TEntityInterface>> errors = [];
         foreach (TEntity item in resultItems) {
             try {
                 item.EvaluateRead();
                 successes.Add(item);
             } catch (Exception exception) {
-                EntityError<TEntity> failure = new(EntityErrorEvents.READ_VALIDATION_FAILED, item, exception);
-                failures.Add(failure);
+                EntityError<TEntityInterface> error = new(EntityErrorEvents.READ_VALIDATION_FAILED, item, exception);
+                errors.Add(error);
             }
         }
 
-        if (parameters.Behavior == FilteringBehaviors.First && failures.Count > 0) {
-            throw failures[0];
+        if (parameters.Behavior == FilteringBehaviors.First && errors.Count > 0) {
+            throw errors[0];
         }
 
-        return new BatchOperationOutput<TEntity>(
+        return new BatchOperationOutput<TEntityInterface>(
                 [.. successes],
-                [.. failures]
+                [.. errors]
             );
     }
 
@@ -315,87 +237,16 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
 
     #region Update 
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="original"> Lastest data set stored in db sorce. </param>
-    /// <param name="overwritten"> Modified set given in update service params. This modifications must be applied to the [current] set in db source. </param>
-    void UpdateHelper(IEntity original, IEntity overwritten) {
-        EntityEntry previousEntry = _db.Entry(original);
-        if (previousEntry.State == EntityState.Unchanged) {
-            // Update the non-navigation properties.
-            previousEntry.CurrentValues.SetValues(overwritten);
-            foreach (NavigationEntry navigation in previousEntry.Navigations) {
-                object? newNavigationValue = _db.Entry(overwritten).Navigation(navigation.Metadata.Name).CurrentValue;
-                // Validate if navigation is a collection.
-                if (navigation.CurrentValue is IEnumerable<object> previousCollection && newNavigationValue is IEnumerable<object> newCollection) {
-                    List<object> previousList = [.. previousCollection];
-                    List<object> newList = [.. newCollection];
-                    // Perform a search for new items to add in the collection.
-                    // NOTE: the followings iterations must be performed in diferent code segments to avoid index length conflicts.
-                    for (int i = 0; i < newList.Count; i++) {
-                        IEntity? newItemSet = (IEntity)newList[i];
-                        if (newItemSet != null && newItemSet.Id <= 0) {
-                            // Getting the item type to add.
-                            Type itemType = newItemSet.GetType();
-                            // Getting the Add method from Icollection.
-                            MethodInfo? addMethod = previousCollection.GetType().GetMethod("Add", [itemType]);
-                            // Adding the new item to Icollection.
-                            _ = (addMethod?.Invoke(previousCollection, [newItemSet]));
-
-                        }
-                    }
-                    // Find items to modify.
-                    for (int i = 0; i < previousList.Count; i++) {
-                        // For each new item stored in overwritten collection, will search for an ID match and update the overwritten.
-                        foreach (object newitem in newList) {
-                            if (previousList[i] is IEntity previousItem && newitem is IEntity newItemSet && previousItem.Id == newItemSet.Id) {
-                                UpdateHelper(previousItem, newItemSet);
-                            }
-                        }
-                    }
-                } else if (navigation.CurrentValue == null && newNavigationValue != null) {
-                    // Create a new navigation overwritten.
-                    // Also update the attached navigators.
-                    //AttachDate(newNavigationValue);
-                    EntityEntry newNavigationEntry = _db.Entry(newNavigationValue);
-                    newNavigationEntry.State = EntityState.Added;
-                    navigation.CurrentValue = newNavigationValue;
-                } else if (navigation.CurrentValue != null && newNavigationValue != null) {
-                    // Update the existing navigation overwritten
-                    if (navigation.CurrentValue is IEntity currentItemSet && newNavigationValue is IEntity newItemSet) {
-                        UpdateHelper(currentItemSet, newItemSet);
-                    }
-                }
-
-            }
-        }
-
-    }
-
-    /// <summary>
-    ///     Updates the given record calculating the current stored values with the given <paramref name="entity"/> to update and store the new values.
-    /// </summary>
-    /// <param name="input">
-    ///     Operation input parameters.
-    /// </param>
-    /// <returns></returns>
-    /// <remarks>
-    ///     Always the record to be overriden will be defined by the <see cref="IEntity.Id"/> property, if isn't given, will try with <see cref="NamedEntityBase.Name"/> property in case the
-    ///     [Entity] implementation does have it, otherwise will finally create a new record with the given values.
-    /// </remarks>
-    /// <exception cref="DepotError{TEntity}">
-    ///     <see cref="IDepot{TEntity}"/> related exception.
-    /// </exception>
-    public async Task<UpdateOutput<TEntity>> Update(QueryInput<TEntity, UpdateInput<TEntity>> input) {
-        UpdateInput<TEntity> parameters = input.Parameters;
+    public async Task<UpdateOutput<TEntityInterface>> Update(QueryInput<TEntityInterface, UpdateInput<TEntityInterface>> input) {
+        UpdateInput<TEntityInterface> parameters = input.Parameters;
 
         IQueryable<TEntity> processedQuery = _dbSet.Process(
                 input,
                 (sourceQuery) => sourceQuery
-            );
+            )
+            .Cast<TEntity>();
 
-        TEntity entity = parameters.Entity;
+        TEntity entity = (TEntity)parameters.Entity;
 
         /// --> When the entity is not saved yet.
         if (entity.Id == 0) {
@@ -403,16 +254,16 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
                 throw new DepotError<TEntity>(DepotErrorEvents.CREATE_DISABLED);
             }
 
-            entity = await Create(entity);
+            entity = (TEntity)await Create(entity);
             _disposer?.Push(entity);
 
-            return new UpdateOutput<TEntity> {
-                Original = null,
+            return new UpdateOutput<TEntityInterface> {
+                Original = default,
                 Updated = entity,
             };
         }
 
-        ///
+
         TEntity? original = await processedQuery
             .Where(obj => obj.Id == entity.Id)
             .AsNoTracking()
@@ -424,11 +275,11 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
                 throw new DepotError<TEntity>(DepotErrorEvents.UNFOUND, $"{typeof(TEntity).Name}.Id = {entity.Id}");
 
             entity.Id = 0;
-            entity = await Create(entity);
+            entity = (TEntity)await Create(entity);
             _disposer?.Push(entity);
 
-            return new UpdateOutput<TEntity> {
-                Original = null,
+            return new UpdateOutput<TEntityInterface> {
+                Original = default,
                 Updated = entity,
             };
         }
@@ -438,7 +289,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
         await _db.SaveChangesAsync();
         _disposer?.Push(entity);
 
-        return new UpdateOutput<TEntity> {
+        return new UpdateOutput<TEntityInterface> {
             Original = original,
             Updated = entity,
         };
@@ -448,19 +299,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
 
     #region Delete
 
-    /// <summary>
-    ///     Deletes the <see cref="TEntity"/> record based on its <see cref="IEntity.Id"/> value.
-    /// </summary>
-    /// <param name="Id">
-    ///     <see cref="IEntity.Id"/> to match.
-    /// </param>
-    /// <returns>
-    ///     Deleted <see cref="TEntity"/> record.
-    /// </returns>
-    /// <exception cref="DepotError{TEntity}">
-    ///     <see cref="IDepot{TEntity}"/> based exception, more info see inner Situation.
-    /// </exception>
-    public async Task<TEntity> Delete(long id) {
+    public async Task<TEntityInterface> Delete(long id) {
         TEntity entity = await _dbSet
             .AsNoTracking()
             .FirstOrDefaultAsync(
@@ -473,18 +312,17 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
         return entity;
     }
 
-
-    public async Task<BatchOperationOutput<TEntity>> Delete(long[] ids) {
+    public async Task<BatchOperationOutput<TEntityInterface>> Delete(long[] ids) {
         List<TEntity> successes = [];
-        List<EntityError<TEntity>> failures = [];
+        List<EntityError<TEntityInterface>> failures = [];
         foreach (long id in ids) {
 
             try {
-                TEntity success = await Delete(id);
+                TEntity success = (TEntity)await Delete(id);
                 successes.Add(success);
             } catch (Exception ex) {
                 failures.Add(
-                        new EntityError<TEntity>(
+                        new EntityError<TEntityInterface>(
                                 EntityErrorEvents.DELETE_FAILED,
                                 new TEntity {
                                     Id = id
@@ -495,57 +333,58 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
             }
         }
 
-        return new BatchOperationOutput<TEntity>([.. successes], [.. failures]);
+        return new BatchOperationOutput<TEntityInterface>([.. successes], [.. failures]);
     }
 
-    public async Task<BatchOperationOutput<TEntity>> Delete(QueryInput<TEntity, FilterQueryInput<TEntity>> input) {
-        FilterQueryInput<TEntity> parameters = input.Parameters;
+    public async Task<BatchOperationOutput<TEntityInterface>> Delete(QueryInput<TEntityInterface, FilterQueryInput<TEntityInterface>> input) {
+        FilterQueryInput<TEntityInterface> parameters = input.Parameters;
 
-        IQueryable<TEntity> query = _dbSet.Process(
+        IQueryable<TEntityInterface> query = _dbSet.Process(
                 input,
                 (query) => {
                     return query
+                        .Cast<TEntity>()
                         .AsNoTracking()
                         .Where(parameters.Filter);
                 }
             );
 
         List<TEntity> successes = [];
-        List<EntityError<TEntity>> failures = [];
+        List<EntityError<TEntityInterface>> failures = [];
 
-        TEntity[] entities = await query.ToArrayAsync();
+        TEntityInterface[] entities = await query.ToArrayAsync();
 
         foreach (TEntity entity in entities) {
             try {
-                TEntity deletedEntity = await Delete(entity.Id);
+                TEntity deletedEntity = (TEntity)await Delete(entity.Id);
                 successes.Add(deletedEntity);
             } catch (Exception exception) {
                 failures.Add(
-                        new EntityError<TEntity>(EntityErrorEvents.DELETE_FAILED, entity, exception)
+                        new EntityError<TEntityInterface>(EntityErrorEvents.DELETE_FAILED, entity, exception)
                     );
             }
         }
 
-        return new BatchOperationOutput<TEntity>([.. successes], [.. failures]);
+        return new BatchOperationOutput<TEntityInterface>([.. successes], [.. failures]);
     }
 
-    public async Task<TEntity> Delete(TEntity Entity) {
-        _dbSet.Remove(Entity);
+    public async Task<TEntityInterface> Delete(TEntityInterface entity) {
+        _dbSet.Remove((TEntity)entity);
         await _db.SaveChangesAsync();
-        return Entity;
+        return entity;
     }
 
-    public async Task<BatchOperationOutput<TEntity>> Delete(TEntity[] entities) {
-        List<TEntity> successes = [];
-        List<EntityError<TEntity>> failures = [];
-        foreach (TEntity entity in entities) {
+    public async Task<BatchOperationOutput<TEntityInterface>> Delete(TEntityInterface[] entities) {
+        List<TEntityInterface> successes = [];
+        List<EntityError<TEntityInterface>> failures = [];
+        foreach (TEntity entity in entities.Cast<TEntity>()) {
 
             try {
-                TEntity success = await Delete(entity);
+                TEntity success = (TEntity)await Delete(entity);
                 successes.Add(success);
             } catch (Exception ex) {
                 failures.Add(
-                        new EntityError<TEntity>(
+                        new EntityError<TEntityInterface>(
                                 EntityErrorEvents.DELETE_FAILED,
                                 entity,
                                 ex
@@ -554,7 +393,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
             }
         }
 
-        return new BatchOperationOutput<TEntity>([.. successes], [.. failures]);
+        return new BatchOperationOutput<TEntityInterface>([.. successes], [.. failures]);
     }
 
     #endregion
