@@ -1,22 +1,18 @@
 ﻿using CSM_Database_Testing.Disposing.Abstractions.Bases;
 
-using Microsoft.EntityFrameworkCore;
-
 namespace CSM_Database_Testing.Disposing;
 
-/// <summary>
-///     Implementation for a [Quality] purposes data [Disposition], data created to handle and simulate test/quality cases.
-/// </summary>
+/// <inheritdoc cref="TestingDisposerBase"/>
 public class TestingDisposer
     : TestingDisposerBase {
 
     /// <summary>
-    ///     Creates a new <see cref="TestingDisposer"/> instance.
+    ///     Creates a new instance.
     /// </summary>
-    /// <param name="Factories">
-    ///     Subscribed <see cref="DbContext"/> handlers for data remotion.
+    /// <param name="dbFactories">
+    ///     Database factories used during testing data creation for data disposition.
     /// </param>
-    public TestingDisposer(params DatabaseFactory[] Factories)
-        : base(Factories) {
+    public TestingDisposer(params DatabaseFactory[] dbFactories)
+        : base(dbFactories) {
     }
 }
