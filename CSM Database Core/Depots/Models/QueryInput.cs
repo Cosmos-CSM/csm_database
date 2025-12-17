@@ -7,8 +7,8 @@ namespace CSM_Database_Core.Depots.Models;
 ///     [Record] for specific <see cref="IDepot{TEntity}"/> operations,
 ///     is a required parameters for operations related with database data management.
 /// </summary>
-public record QueryInput<TEntityInterface, TParameters>
-    where TEntityInterface : IEntity {
+public record QueryInput<TEntity, TParameters>
+    where TEntity : IEntity {
 
     /// <summary>
     ///    Custom operation scope input parameters information.
@@ -18,10 +18,10 @@ public record QueryInput<TEntityInterface, TParameters>
     /// <summary>
     ///     Custom query process to apply before the operation commit.
     /// </summary>
-    public QueryProcessor<TEntityInterface>? PreProcessor { get; set; }
+    public QueryProcessor<TEntity>? PreProcessor { get; set; }
 
     /// <summary>
     ///     Custom query process to apply after the operation commit.
     /// </summary>
-    public QueryProcessor<TEntityInterface>? PostProcessor { get; set; }
+    public QueryProcessor<TEntity>? PostProcessor { get; set; }
 }

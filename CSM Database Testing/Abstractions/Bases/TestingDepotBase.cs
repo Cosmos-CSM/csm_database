@@ -16,39 +16,37 @@ using Xunit;
 namespace CSM_Database_Testing.Abstractions.Bases;
 
 /// <summary>
-///     [Abstract] class for Quality Depots implementations. This are classes that tests the functionallity quality of a certain <see cref="DepotBase{TDatabase, TEntity}"/>, providing
-///     default built-in tests for all these implementations.
+///     Represents a testing base class for a data source depot.
 /// </summary>
 /// <typeparam name="TEntity">
-///     [Entity] the <see cref="TDepot"/> is based on.
+///     Type of the <see cref="IEntity"/> being tested.
 /// </typeparam>
 /// <typeparam name="TDepot">
-///     [Depot] to be qualified.
+///     Type of the <see cref="IDepot{TEntity}"/> being tested.
 /// </typeparam>
 /// <typeparam name="TDatabase">
-///     [Database] that stores the <see cref="TEntity"/> data.
+///     Type of the <see cref="CSM_Database_Core.Abstractions.Interfaces.IDatabase"/> handling the <typeparamref name="TDepot"/>.
 /// </typeparam>
-public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatabase>
+public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
     : TestingDataHandlerBase
-    where TEntityInterface : IEntity
-    where TEntity : class, TEntityInterface, new()
-    where TDepot : IDepot<TEntity, TEntityInterface>
+    where TEntity : class, IEntity, new()
+    where TDepot : IDepot<TEntity>
     where TDatabase : DatabaseBase<TDatabase>, new() {
 
     /// <summary>
-    ///     Depot instance to operate tests.
+    ///     <see cref="IDepot{TEntity}"/> instance to test.
     /// </summary>
-    protected readonly TDepot Depot;
+    protected readonly TDepot _depot;
 
     /// <summary>
-    ///     Database context the <see cref="Depot"/> is using.
+    ///     <see cref="_depot"/>'s database context.
     /// </summary>
-    protected readonly TDatabase Database;
+    protected readonly TDatabase _database;
 
     /// <summary>
     ///     Stores the most valid evaluable property from the current <see cref="TEntity"/>. used for ordering and filtering at View operations and evaluate their quality.
     /// </summary>
-    protected readonly PropertyInfo Evaluable;
+    protected readonly PropertyInfo _evaluableProperty;
 
     /// <summary>
     ///     Generates a new behavior base for <see cref="TestingDepotBase{TMigrationSet, TMigrationDepot, TMigrationDatabases}"/>.
@@ -76,14 +74,14 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
             ]
         ) {
 
-        Database = (TDatabase)database?.Invoke()!
+        _database = (TDatabase)database?.Invoke()!
                     ?? (TDatabase)Activator.CreateInstance(
                         typeof(TDatabase),
                         new DatabaseOptions<TDatabase> {
                             ForTesting = true,
                         }
                     )!;
-        Depot = (TDepot)Activator.CreateInstance(typeof(TDepot), Database, null)!;
+        _depot = (TDepot)Activator.CreateInstance(typeof(TDepot), _database, null)!;
 
         PropertyInfo[] entityProperties = typeof(TEntity).GetProperties();
 
@@ -100,7 +98,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
             break;
         }
 
-        Evaluable = orderableTmp ?? typeof(TEntity).GetProperty(nameof(IEntity.Id))!; // By default if the [Entity] doesn't have a valid evaluable property will use the Id. 
+        _evaluableProperty = orderableTmp ?? typeof(TEntity).GetProperty(nameof(IEntity.Id))!; // By default if the [Entity] doesn't have a valid evaluable property will use the Id. 
     }
 
     #region Abtraction
@@ -125,7 +123,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
     /// </summary>
     /// <param name="SampleEntities"></param>
     protected async Task CommitSampleEntities(ICollection<IEntity> SampleEntities) {
-        await Database.SaveChangesAsync();
+        await _database.SaveChangesAsync();
         Disposer.Push([.. SampleEntities]);
     }
 
@@ -134,9 +132,9 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
     /// </summary>
     /// <param name="expected"></param>
     /// <param name="actual"></param>
-    protected void AssertEvaluable(TEntityInterface expected, TEntityInterface actual) {
-        object? sampleEvaluableValue = Evaluable.GetValue(expected);
-        object? overwrittenEvaluableValue = Evaluable.GetValue(actual);
+    protected void AssertEvaluable(TEntity expected, TEntity actual) {
+        object? sampleEvaluableValue = _evaluableProperty.GetValue(expected);
+        object? overwrittenEvaluableValue = _evaluableProperty.GetValue(actual);
 
         Assert.Equal(sampleEvaluableValue, overwrittenEvaluableValue);
     }
@@ -166,7 +164,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
 
         bool iteratorLock;
         do {
-            iteratorLock = await Database.Set<TEntity>().FindAsync(randomLong) is not null;
+            iteratorLock = await _database.Set<TEntity>().FindAsync(randomLong) is not null;
         } while (iteratorLock);
 
         return randomLong;
@@ -211,7 +209,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
     public async Task CreateA() {
         TEntity sample = Sampling();
 
-        TEntityInterface storedEntity = await Depot.Create(sample);
+        TEntity storedEntity = await _depot.Create(sample);
         await CommitSampleEntities([storedEntity]);
 
         Assert.Multiple(
@@ -220,7 +218,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
                 async () => {
                     await Assert.ThrowsAnyAsync<Exception>(
                         async () => {
-                            await Depot.Create(sample);
+                            await _depot.Create(sample);
                             await CommitSampleEntities([sample]);
                         }
                     );
@@ -233,7 +231,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
     public async Task CreateB() {
         TEntity[] samples = Sampling(3);
 
-        BatchOperationOutput<TEntityInterface> qOut = await Depot.Create(samples);
+        BatchOperationOutput<TEntity> qOut = await _depot.Create(samples);
         await CommitSampleEntities(samples);
 
         Assert.Multiple(
@@ -253,14 +251,14 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
     public virtual async Task ReadA() {
         TEntity sample = Store(EntityFactory);
 
-        TEntityInterface readEntity = await Depot.Read(sample.Id);
+        TEntity readEntity = await _depot.Read(sample.Id);
         Assert.Multiple(
                 [
                     () => Assert.Equal(sample.Id, readEntity.Id),
                     () => Assert.Equal(sample.Timestamp, readEntity.Timestamp),
                     () => {
-                            object? sampleEvaluableValue = Evaluable.GetValue(sample);
-                            object? readEvaluableValue = Evaluable.GetValue(readEntity);
+                            object? sampleEvaluableValue = _evaluableProperty.GetValue(sample);
+                            object? readEvaluableValue = _evaluableProperty.GetValue(readEntity);
                             Assert.Equal(sampleEvaluableValue, readEvaluableValue);
                         }
                 ]
@@ -272,7 +270,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
         TEntity[] samples = await Store(20, EntityFactory);
         long[] sampleIds = [.. samples.Select(i => i.Id)];
 
-        BatchOperationOutput<TEntityInterface> readEntities = await Depot.Read(sampleIds);
+        BatchOperationOutput<TEntity> readEntities = await _depot.Read(sampleIds);
         Assert.Multiple(
                 [
                     () => Assert.Empty(readEntities.Failures),
@@ -285,8 +283,8 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
                             Assert.Equal(sample.Id, entity.Id);
                             Assert.Equal(sample.Timestamp, entity.Timestamp);
 
-                            object? evaluableSampleValue = Evaluable.GetValue(sample);
-                            object? evaluableEntityValue = Evaluable.GetValue(entity);
+                            object? evaluableSampleValue = _evaluableProperty.GetValue(sample);
+                            object? evaluableEntityValue = _evaluableProperty.GetValue(entity);
                             Assert.Equal(evaluableSampleValue, evaluableEntityValue);
                         }
                     )
@@ -299,9 +297,9 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
         TEntity[] samples = await Store(2, EntityFactory);
         TEntity samplePivot = samples[0];
 
-        BatchOperationOutput<TEntityInterface> readEntites = await Depot.Read(
-                new QueryInput<TEntityInterface, FilterQueryInput<TEntityInterface>> {
-                    Parameters = new FilterQueryInput<TEntityInterface> {
+        BatchOperationOutput<TEntity> readEntites = await _depot.Read(
+                new QueryInput<TEntity, FilterQueryInput<TEntity>> {
+                    Parameters = new FilterQueryInput<TEntity> {
                         Behavior = FilteringBehaviors.First,
                         Filter = (entity) => entity.Id == samplePivot.Id || entity.Id == samples[1].Id
                     }
@@ -313,13 +311,13 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
                     () => Assert.Empty(readEntites.Failures),
                     () => Assert.Equal(1, readEntites.SuccessesCount),
                     () => {
-                        TEntityInterface readEntity = readEntites.Successes[0];
+                        TEntity readEntity = readEntites.Successes[0];
 
                         Assert.Equal(samplePivot.Id, readEntity.Id);
                         Assert.Equal(samplePivot.Timestamp, readEntity.Timestamp);
 
-                        object? evaluableSampleValue = Evaluable.GetValue(samplePivot);
-                        object? evaluableEntityValue = Evaluable.GetValue(readEntity);
+                        object? evaluableSampleValue = _evaluableProperty.GetValue(samplePivot);
+                        object? evaluableEntityValue = _evaluableProperty.GetValue(readEntity);
                         Assert.Equal(evaluableSampleValue, evaluableEntityValue);
                     },
                 ]
@@ -331,9 +329,9 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
         TEntity[] samples = await Store(2, EntityFactory);
         TEntity samplePivot = samples[1];
 
-        BatchOperationOutput<TEntityInterface> readEntites = await Depot.Read(
-                new QueryInput<TEntityInterface, FilterQueryInput<TEntityInterface>> {
-                    Parameters = new FilterQueryInput<TEntityInterface> {
+        BatchOperationOutput<TEntity> readEntites = await _depot.Read(
+                new QueryInput<TEntity, FilterQueryInput<TEntity>> {
+                    Parameters = new FilterQueryInput<TEntity> {
                         Behavior = FilteringBehaviors.Last,
                         Filter = (entity) => entity.Id == samplePivot.Id || entity.Id == samples[0].Id
                     }
@@ -345,13 +343,13 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
                     () => Assert.Empty(readEntites.Failures),
                     () => Assert.Equal(1, readEntites.SuccessesCount),
                     () => {
-                        TEntityInterface readEntity = readEntites.Successes[0];
+                        TEntity readEntity = readEntites.Successes[0];
 
                         Assert.Equal(samplePivot.Id, readEntity.Id);
                         Assert.Equal(samplePivot.Timestamp, readEntity.Timestamp);
 
-                        object? evaluableSampleValue = Evaluable.GetValue(samplePivot);
-                        object? evaluableEntityValue = Evaluable.GetValue(readEntity);
+                        object? evaluableSampleValue = _evaluableProperty.GetValue(samplePivot);
+                        object? evaluableEntityValue = _evaluableProperty.GetValue(readEntity);
                         Assert.Equal(evaluableSampleValue, evaluableEntityValue);
                     },
                 ]
@@ -362,9 +360,9 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
     public virtual async Task ReadE() {
         TEntity[] samples = await Store(2, EntityFactory);
 
-        BatchOperationOutput<TEntityInterface> readEntites = await Depot.Read(
-                new QueryInput<TEntityInterface, FilterQueryInput<TEntityInterface>> {
-                    Parameters = new FilterQueryInput<TEntityInterface> {
+        BatchOperationOutput<TEntity> readEntites = await _depot.Read(
+                new QueryInput<TEntity, FilterQueryInput<TEntity>> {
+                    Parameters = new FilterQueryInput<TEntity> {
                         Behavior = FilteringBehaviors.All,
                         Filter = (entity) => entity.Id == samples[0].Id || entity.Id == samples[1].Id
                     }
@@ -378,13 +376,13 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
                     () => Assert.All(
                             samples,
                             (sample) => {
-                                TEntityInterface entity = readEntites.Successes.First(i => i.Id == sample.Id);
+                                TEntity entity = readEntites.Successes.First(i => i.Id == sample.Id);
 
                                 Assert.Equal(sample.Id, entity.Id);
                                 Assert.Equal(sample.Timestamp, entity.Timestamp);
 
-                                object? evaluableSampleValue = Evaluable.GetValue(sample);
-                                object? evaluableEntityValue = Evaluable.GetValue(entity);
+                                object? evaluableSampleValue = _evaluableProperty.GetValue(sample);
+                                object? evaluableEntityValue = _evaluableProperty.GetValue(entity);
                                 Assert.Equal(evaluableSampleValue, evaluableEntityValue);
                             }
                         ),
@@ -400,9 +398,9 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
     public virtual async Task UpdateA() {
         TEntity sample = RunEntityFactory(EntityFactory);
 
-        UpdateOutput<TEntityInterface> updateOutput = await Depot.Update(
-                new QueryInput<TEntityInterface, UpdateInput<TEntityInterface>> {
-                    Parameters = new UpdateInput<TEntityInterface> {
+        UpdateOutput<TEntity> updateOutput = await _depot.Update(
+                new QueryInput<TEntity, UpdateInput<TEntity>> {
+                    Parameters = new UpdateInput<TEntity> {
                         Entity = sample,
                         Create = true,
                     },
@@ -414,7 +412,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
                 [
                     () => Assert.Null(updateOutput.Original),
                     () => {
-                        TEntityInterface overwritten = updateOutput.Updated;
+                        TEntity overwritten = updateOutput.Updated;
 
                         Assert.True(overwritten.Id > 0);
                         AssertEvaluable(sample, overwritten);
@@ -429,12 +427,12 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
 
         DepotError<TEntity> depotException = await Assert.ThrowsAsync<DepotError<TEntity>>(
                 async () => {
-                            UpdateOutput<TEntityInterface> updateOutput = await Depot.Update(
-                        new QueryInput<TEntityInterface, UpdateInput<TEntityInterface>> {
-                            Parameters = new UpdateInput<TEntityInterface> {
-                                Entity = sample,
-                            },
-                        }
+                    UpdateOutput<TEntity> updateOutput = await _depot.Update(
+                new QueryInput<TEntity, UpdateInput<TEntity>> {
+                    Parameters = new UpdateInput<TEntity> {
+                        Entity = sample,
+                    },
+                }
                     );
                 }
             );
@@ -449,9 +447,9 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
 
         DepotError<TEntity> depotException = await Assert.ThrowsAsync<DepotError<TEntity>>(
                 async () => {
-                    UpdateOutput<TEntityInterface> updateOutput = await Depot.Update(
-                        new QueryInput<TEntityInterface, UpdateInput<TEntityInterface>> {
-                            Parameters = new UpdateInput<TEntityInterface> {
+                    UpdateOutput<TEntity> updateOutput = await _depot.Update(
+                        new QueryInput<TEntity, UpdateInput<TEntity>> {
+                            Parameters = new UpdateInput<TEntity> {
                                 Entity = sample,
                             },
                         }
@@ -464,13 +462,13 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
     [Fact(DisplayName = $"[Update Entity]: Entity gets updated correctly")]
     public virtual async Task UpdateD() {
         PropertyInfo ValidEvaluable;
-        if (Evaluable.Name == nameof(IEntity.Id)) {
+        if (_evaluableProperty.Name == nameof(IEntity.Id)) {
             ValidEvaluable = typeof(TEntity).GetProperties()
                 .FirstOrDefault(p => p.Name != nameof(IEntity.Id))
                 ?? typeof(TEntity).GetProperty(nameof(IEntity.Id))!;
 
         } else {
-            ValidEvaluable = Evaluable;
+            ValidEvaluable = _evaluableProperty;
         }
         TEntity sample = Store(EntityFactory);
         TEntity valueReference = RunEntityFactory(EntityFactory);
@@ -479,9 +477,9 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
 
         ValidEvaluable.SetValue(sample, ValidEvaluable.GetValue(valueReference));
 
-        UpdateOutput<TEntityInterface> updateOutput = await Depot.Update(
-                new QueryInput<TEntityInterface, UpdateInput<TEntityInterface>> {
-                    Parameters = new UpdateInput<TEntityInterface> {
+        UpdateOutput<TEntity> updateOutput = await _depot.Update(
+                new QueryInput<TEntity, UpdateInput<TEntity>> {
+                    Parameters = new UpdateInput<TEntity> {
                         Entity = sample,
                     },
                 }
@@ -491,7 +489,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
                 [
                     () => Assert.NotNull(updateOutput.Original),
                     () => {
-                        TEntityInterface overwritten = updateOutput.Updated;
+                        TEntity overwritten = updateOutput.Updated;
 
                         Assert.NotEqual(updateOutput.Original, overwritten);
 
@@ -514,7 +512,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
 
         DepotError<TEntity> depotException = await Assert.ThrowsAsync<DepotError<TEntity>>(
                 async () => {
-                    await Depot.Delete(unexistPointer);
+                    await _depot.Delete(unexistPointer);
                 }
             );
 
@@ -525,10 +523,10 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
     public virtual async Task DeleteB() {
         TEntity entity = Store(EntityFactory);
 
-        await Depot.Delete(entity.Id);
+        await _depot.Delete(entity.Id);
         await CommitSampleEntities([]);
 
-        TEntity? searchedEntity = Database.Set<TEntity>().Find(entity.Id);
+        TEntity? searchedEntity = _database.Set<TEntity>().Find(entity.Id);
         Assert.Null(searchedEntity);
     }
 
@@ -536,9 +534,9 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
     public virtual async Task DeleteC() {
         TEntity entity = (await Store(10, EntityFactory))[0];
 
-        BatchOperationOutput<TEntityInterface> deleteOutput = await Depot.Delete(
-                new QueryInput<TEntityInterface, FilterQueryInput<TEntityInterface>>() {
-                    Parameters = new FilterQueryInput<TEntityInterface> {
+        BatchOperationOutput<TEntity> deleteOutput = await _depot.Delete(
+                new QueryInput<TEntity, FilterQueryInput<TEntity>>() {
+                    Parameters = new FilterQueryInput<TEntity> {
                         Filter = (entityB) => entityB.Id == entity.Id,
                     }
                 }
@@ -551,13 +549,13 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
                     () => Assert.Empty(deleteOutput.Failures),
                     () => Assert.NotEmpty(deleteOutput.Successes),
                     () => {
-                        TEntityInterface deletedEntity = deleteOutput.Successes[0];
+                        TEntity deletedEntity = deleteOutput.Successes[0];
 
                         Assert.Equal(entity.Id, deletedEntity.Id);
                     },
                     () => {
                         Assert.Null(
-                                Database.Set<TEntity>().Find(entity.Id)
+                                _database.Set<TEntity>().Find(entity.Id)
                             );
                     }
                 ]
@@ -573,8 +571,8 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
         const int viewPage = 1;
         await Store(30, EntityFactory);
 
-        ViewOutput<TEntityInterface> viewOutput = await Depot.View(
-                new QueryInput<TEntityInterface, ViewInput<TEntityInterface>> {
+        ViewOutput<TEntity> viewOutput = await _depot.View(
+                new QueryInput<TEntity, ViewInput<TEntity>> {
                     Parameters = new() {
                         Retroactive = false,
                         Range = 20,
@@ -596,9 +594,9 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
         const int viewPage = 2;
         await Store(30, EntityFactory);
 
-        ViewOutput<TEntityInterface> viewOutput = await Depot.View(
-                new QueryInput<TEntityInterface, ViewInput<TEntityInterface>> {
-                    Parameters = new ViewInput<TEntityInterface> {
+        ViewOutput<TEntity> viewOutput = await _depot.View(
+                new QueryInput<TEntity, ViewInput<TEntity>> {
+                    Parameters = new ViewInput<TEntity> {
                         Retroactive = false,
                         Range = 20,
                         Page = viewPage,
@@ -617,15 +615,15 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
     [Fact(DisplayName = $"[View]: Specific ordering by property")]
     public async Task ViewC() {
 
-        ViewOutput<TEntityInterface> orderedViewOutput = await Depot.View(
-                        new QueryInput<TEntityInterface, ViewInput<TEntityInterface>> {
+        ViewOutput<TEntity> orderedViewOutput = await _depot.View(
+                        new QueryInput<TEntity, ViewInput<TEntity>> {
                             Parameters = new() {
                                 Page = 1,
                                 Range = 20,
                                 Retroactive = false,
                                 Orderings = [
                                     new ViewOrdering {
-                                        Property = Evaluable.Name,
+                                        Property = _evaluableProperty.Name,
                                         Ordering = ViewOrderings.Descending,
                                     },
                                 ],
@@ -639,7 +637,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
             Type setType = typeof(TEntity);
             ParameterExpression parameterExpression = Expression.Parameter(setType, $"X0");
 
-            MemberExpression memberExpression = Expression.MakeMemberAccess(parameterExpression, Evaluable);
+            MemberExpression memberExpression = Expression.MakeMemberAccess(parameterExpression, _evaluableProperty);
             UnaryExpression translationExpression = Expression.Convert(memberExpression, typeof(object));
             Expression<Func<TEntity, object>> orderingExpression = Expression.Lambda<Func<TEntity, object>>(translationExpression, parameterExpression);
 
@@ -652,20 +650,20 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
             TEntity expected = orderedReferenceRecords.ElementAt(i);
             TEntity actual = (TEntity)orderedViewOutput.Entities[i];
 
-            Assert.Equal(Evaluable.GetValue(expected), Evaluable.GetValue(actual));
+            Assert.Equal(_evaluableProperty.GetValue(expected), _evaluableProperty.GetValue(actual));
         }
     }
 
     [Fact(DisplayName = "[View]: Using Date filter")]
     public async Task ViewD() {
-        ViewOutput<TEntityInterface> viewOutput = await Depot.View(
-                new QueryInput<TEntityInterface, ViewInput<TEntityInterface>> {
+        ViewOutput<TEntity> viewOutput = await _depot.View(
+                new QueryInput<TEntity, ViewInput<TEntity>> {
                     Parameters = new() {
                         Page = 1,
                         Range = 20,
                         Retroactive = false,
                         Filters = [
-                            new ViewFilterDate<TEntityInterface> {
+                            new ViewFilterDate<TEntity> {
                                 From = DateTime.UtcNow.Date,
                             },
                         ],
@@ -684,21 +682,21 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
 
     [SkippableFact(DisplayName = "[View]: Using Property filter (Contains)")]
     public async Task ViewE() {
-        Skip.If(Evaluable.PropertyType != typeof(string), "This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
+        Skip.If(_evaluableProperty.PropertyType != typeof(string), "This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
 
         TEntity sampleEntity = Store(EntityFactory);
-        object? sampleValue = Evaluable.GetValue(sampleEntity);
+        object? sampleValue = _evaluableProperty.GetValue(sampleEntity);
 
-        ViewOutput<TEntityInterface> qOut = await Depot.View(
-                new QueryInput<TEntityInterface, ViewInput<TEntityInterface>> {
+        ViewOutput<TEntity> qOut = await _depot.View(
+                new QueryInput<TEntity, ViewInput<TEntity>> {
                     Parameters = new() {
                         Retroactive = false,
                         Range = 20,
                         Page = 1,
                         Filters = [
-                            new ViewFilterProperty<TEntityInterface> {
+                            new ViewFilterProperty<TEntity> {
                                 Operator = ViewFilterOperators.CONTAINS,
-                                Property = Evaluable.Name,
+                                Property = _evaluableProperty.Name,
                                 Value = sampleValue,
                             }
                         ],
@@ -708,7 +706,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
         Assert.All(
             qOut.Entities,
             (i) => {
-                object? value = Evaluable.GetValue(i);
+                object? value = _evaluableProperty.GetValue(i);
 
                 Assert.Equal(sampleValue, value);
             }
@@ -717,31 +715,31 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
 
     [SkippableFact(DisplayName = "[View]: Using filter Linear Evaluation (OR)")]
     public async Task ViewF() {
-        Skip.If(Evaluable.PropertyType != typeof(string), "This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
+        Skip.If(_evaluableProperty.PropertyType != typeof(string), "This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
         TEntity[] entities = await Store(2, EntityFactory);
 
         List<object?> possibleValues = [];
-        List<IViewFilter<TEntityInterface>> filters = [];
+        List<IViewFilter<TEntity>> filters = [];
 
         foreach (TEntity entity in entities) {
-            object? sampleValue = Evaluable.GetValue(entity);
+            object? sampleValue = _evaluableProperty.GetValue(entity);
             filters.Add(
-                    new ViewFilterProperty<TEntityInterface> {
+                    new ViewFilterProperty<TEntity> {
                         Operator = ViewFilterOperators.CONTAINS,
-                        Property = Evaluable.Name,
+                        Property = _evaluableProperty.Name,
                         Value = sampleValue,
                     }
                 );
             possibleValues.Add(sampleValue);
         }
-        ViewOutput<TEntityInterface> viewOutput = await Depot.View(
-                new QueryInput<TEntityInterface, ViewInput<TEntityInterface>> {
+        ViewOutput<TEntity> viewOutput = await _depot.View(
+                new QueryInput<TEntity, ViewInput<TEntity>> {
                     Parameters = new() {
                         Retroactive = false,
                         Range = 20,
                         Page = 1,
                         Filters = [
-                            new ViewFilterLogical<TEntityInterface>{
+                            new ViewFilterLogical<TEntity>{
                                 Operator = ViewFilterLogicalOperators.OR,
                                 Filters = [..filters],
                             },
@@ -752,7 +750,7 @@ public abstract class TestingDepotBase<TEntityInterface, TEntity, TDepot, TDatab
         Assert.All(
             viewOutput.Entities,
             (i) => {
-                object? actualValue = Evaluable.GetValue(i);
+                object? actualValue = _evaluableProperty.GetValue(i);
                 Assert.Contains(actualValue, possibleValues);
             }
         );

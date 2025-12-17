@@ -1,5 +1,19 @@
 # CSM Foundation Database CHANGELOG
 
+## [4.0.0] - 11.12-2025
+
+### Changed
+
+- Reverted and removed version [3.0.0] interface concept is not needed in this abstraction layer.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.0.0            | 2.0.0           |
+| Microsoft.EntityFrameworkCore           | 9.0.8            | 9.0.8           |
+| Microsoft.EntityFrameworkCore.SqlServer | 9.0.8            | 9.0.8           |
+
 ## [3.0.0] - 26.11-2025
 
 ### Changed

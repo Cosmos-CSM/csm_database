@@ -1,6 +1,6 @@
 # CSM Foundation Database Testing CHANGELOG
 
-## [3.1.0] - 16.12-2025
+## [4.1.0] - 16.12-2025
 
 ### Added
 
@@ -11,6 +11,20 @@
 | Package                                 | Previous Version | New Version     |
 |:----------------------------------------|:----------------:|:---------------:|
 | CSM.Foundation.Core                     | 2.0.0            | 2.0.0           |
+| xunit									  | 2.9.3            | 2.9.3           |
+| xunit.SkippableFact   				  | 1.5.23           | 1.5.23          |
+
+## [4.0.0] - 11.12-2025
+
+### Changed
+
+- Reverted and removed version [3.0.0], the interface are not needed in this context abstraction level
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 1.3.1            | 2.0.0           |
 | xunit									  | 2.9.3            | 2.9.3           |
 | xunit.SkippableFact   				  | 1.5.23           | 1.5.23          |
 

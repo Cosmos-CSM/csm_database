@@ -20,11 +20,10 @@ namespace CSM_Database_Core.Depots.Abstractions.Bases;
 /// <typeparam name="TEntity">
 ///     Type of the depot entity handled.
 /// </typeparam>>
-public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
-    : IDepot<TEntity, TEntityInterface>
+public abstract class DepotBase<TDatabase, TEntity>
+    : IDepot<TEntity>
     where TDatabase : DatabaseBase<TDatabase>
-    where TEntity : class, TEntityInterface, new()
-    where TEntityInterface : IEntity {
+    where TEntity : class, IEntity, new() {
 
     /// <summary>
     ///     System data disposition manager.
@@ -81,8 +80,8 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
 
     #region View 
 
-    public virtual async Task<ViewOutput<TEntityInterface>> View(QueryInput<TEntityInterface, ViewInput<TEntityInterface>> input) {
-        ViewInput<TEntityInterface> parameters = input.Parameters;
+    public async Task<ViewOutput<TEntity>> View(QueryInput<TEntity, ViewInput<TEntity>> input) {
+        ViewInput<TEntity> parameters = input.Parameters;
 
         IQueryable<TEntity> processedQuery = _dbSet.Process(
                 input,
@@ -97,7 +96,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
 
         PaginationOutput<TEntity> paginationOutput = await processedQuery.PaginateView(parameters.Page, parameters.Range, parameters.Export);
 
-        return new ViewOutput<TEntityInterface>() {
+        return new ViewOutput<TEntity>() {
             Page = parameters.Page,
             Pages = paginationOutput.PagesCount,
             Count = paginationOutput.EntitiesCount,
@@ -109,7 +108,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
 
     #region Create
 
-    public virtual async Task<TEntityInterface> Create(TEntityInterface entity) {
+    public virtual async Task<TEntity> Create(TEntity entity) {
         TEntity instEntity = (TEntity)entity;
 
         instEntity.Timestamp = DateTime.UtcNow;
@@ -124,22 +123,22 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
         return instEntity;
     }
 
-    public virtual async Task<BatchOperationOutput<TEntityInterface>> Create(ICollection<TEntityInterface> entities, bool sync = false) {
+    public virtual async Task<BatchOperationOutput<TEntity>> Create(ICollection<TEntity> entities, bool sync = false) {
         IEnumerable<TEntity> instEntities = entities.Cast<TEntity>();
 
         TEntity[] createdEntities = [];
-        EntityError<TEntityInterface>[] errors = [];
+        EntityError<TEntity>[] errors = [];
 
         foreach (TEntity instEntity in instEntities) {
             try {
-                TEntityInterface attachedEntity = await Create(instEntity);
+                TEntity attachedEntity = await Create(instEntity);
                 createdEntities = [.. createdEntities, (TEntity)attachedEntity];
             } catch (Exception excep) {
                 if (sync) {
                     throw;
                 }
 
-                EntityError<TEntityInterface> error = new(EntityErrorEvents.CREATE_FAILED, instEntity, excep);
+                EntityError<TEntity> error = new(EntityErrorEvents.CREATE_FAILED, instEntity, excep);
                 errors = [.. errors, error];
             }
         }
@@ -151,7 +150,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
 
     #region Read
 
-    public async Task<TEntityInterface> Read(long id) {
+    public async Task<TEntity> Read(long id) {
         TEntity? entity = await _dbSet.Where(
                 e => e.Id == id
             )
@@ -162,10 +161,10 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
         return entity;
     }
 
-    public async Task<BatchOperationOutput<TEntityInterface>> Read(long[] ids) {
+    public async Task<BatchOperationOutput<TEntity>> Read(long[] ids) {
 
         List<TEntity> readings = [];
-        List<EntityError<TEntityInterface>> errors = [];
+        List<EntityError<TEntity>> errors = [];
 
         foreach (long id in ids) {
 
@@ -174,7 +173,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
                 readings.Add(success);
             } catch (Exception ex) {
                 errors.Add(
-                        new EntityError<TEntityInterface>(
+                        new EntityError<TEntity>(
                                 EntityErrorEvents.READ_FAILED,
                                 new TEntity {
                                     Id = id
@@ -185,11 +184,11 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
             }
         }
 
-        return new BatchOperationOutput<TEntityInterface>([.. readings], [.. errors]);
+        return new BatchOperationOutput<TEntity>([.. readings], [.. errors]);
     }
 
-    public async Task<BatchOperationOutput<TEntityInterface>> Read(QueryInput<TEntityInterface, FilterQueryInput<TEntityInterface>> input) {
-        FilterQueryInput<TEntityInterface> parameters = input.Parameters;
+    public async Task<BatchOperationOutput<TEntity>> Read(QueryInput<TEntity, FilterQueryInput<TEntity>> input) {
+        FilterQueryInput<TEntity> parameters = input.Parameters;
 
         IQueryable<TEntity> processedQuery = _dbSet.Process(
                 input,
@@ -201,7 +200,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
             .Cast<TEntity>();
 
         if (!processedQuery.Any()) {
-            return new BatchOperationOutput<TEntityInterface>([], []);
+            return new BatchOperationOutput<TEntity>([], []);
         }
 
         TEntity[] resultItems = parameters.Behavior switch {
@@ -212,13 +211,13 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
         };
 
         List<TEntity> successes = [];
-        List<EntityError<TEntityInterface>> errors = [];
+        List<EntityError<TEntity>> errors = [];
         foreach (TEntity item in resultItems) {
             try {
                 item.EvaluateRead();
                 successes.Add(item);
             } catch (Exception exception) {
-                EntityError<TEntityInterface> error = new(EntityErrorEvents.READ_VALIDATION_FAILED, item, exception);
+                EntityError<TEntity> error = new(EntityErrorEvents.READ_VALIDATION_FAILED, item, exception);
                 errors.Add(error);
             }
         }
@@ -227,7 +226,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
             throw errors[0];
         }
 
-        return new BatchOperationOutput<TEntityInterface>(
+        return new BatchOperationOutput<TEntity>(
                 [.. successes],
                 [.. errors]
             );
@@ -237,8 +236,8 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
 
     #region Update 
 
-    public async Task<UpdateOutput<TEntityInterface>> Update(QueryInput<TEntityInterface, UpdateInput<TEntityInterface>> input) {
-        UpdateInput<TEntityInterface> parameters = input.Parameters;
+    public async Task<UpdateOutput<TEntity>> Update(QueryInput<TEntity, UpdateInput<TEntity>> input) {
+        UpdateInput<TEntity> parameters = input.Parameters;
 
         IQueryable<TEntity> processedQuery = _dbSet.Process(
                 input,
@@ -257,7 +256,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
             entity = (TEntity)await Create(entity);
             _disposer?.Push(entity);
 
-            return new UpdateOutput<TEntityInterface> {
+            return new UpdateOutput<TEntity> {
                 Original = default,
                 Updated = entity,
             };
@@ -278,7 +277,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
             entity = (TEntity)await Create(entity);
             _disposer?.Push(entity);
 
-            return new UpdateOutput<TEntityInterface> {
+            return new UpdateOutput<TEntity> {
                 Original = default,
                 Updated = entity,
             };
@@ -289,7 +288,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
         await _db.SaveChangesAsync();
         _disposer?.Push(entity);
 
-        return new UpdateOutput<TEntityInterface> {
+        return new UpdateOutput<TEntity> {
             Original = original,
             Updated = entity,
         };
@@ -299,7 +298,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
 
     #region Delete
 
-    public async Task<TEntityInterface> Delete(long id) {
+    public async Task<TEntity> Delete(long id) {
         TEntity entity = await _dbSet
             .AsNoTracking()
             .FirstOrDefaultAsync(
@@ -312,9 +311,9 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
         return entity;
     }
 
-    public async Task<BatchOperationOutput<TEntityInterface>> Delete(long[] ids) {
+    public async Task<BatchOperationOutput<TEntity>> Delete(long[] ids) {
         List<TEntity> successes = [];
-        List<EntityError<TEntityInterface>> failures = [];
+        List<EntityError<TEntity>> failures = [];
         foreach (long id in ids) {
 
             try {
@@ -322,7 +321,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
                 successes.Add(success);
             } catch (Exception ex) {
                 failures.Add(
-                        new EntityError<TEntityInterface>(
+                        new EntityError<TEntity>(
                                 EntityErrorEvents.DELETE_FAILED,
                                 new TEntity {
                                     Id = id
@@ -333,13 +332,13 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
             }
         }
 
-        return new BatchOperationOutput<TEntityInterface>([.. successes], [.. failures]);
+        return new BatchOperationOutput<TEntity>([.. successes], [.. failures]);
     }
 
-    public async Task<BatchOperationOutput<TEntityInterface>> Delete(QueryInput<TEntityInterface, FilterQueryInput<TEntityInterface>> input) {
-        FilterQueryInput<TEntityInterface> parameters = input.Parameters;
+    public async Task<BatchOperationOutput<TEntity>> Delete(QueryInput<TEntity, FilterQueryInput<TEntity>> input) {
+        FilterQueryInput<TEntity> parameters = input.Parameters;
 
-        IQueryable<TEntityInterface> query = _dbSet.Process(
+        IQueryable<TEntity> query = _dbSet.Process(
                 input,
                 (query) => {
                     return query
@@ -350,9 +349,9 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
             );
 
         List<TEntity> successes = [];
-        List<EntityError<TEntityInterface>> failures = [];
+        List<EntityError<TEntity>> failures = [];
 
-        TEntityInterface[] entities = await query.ToArrayAsync();
+        TEntity[] entities = await query.ToArrayAsync();
 
         foreach (TEntity entity in entities) {
             try {
@@ -360,23 +359,23 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
                 successes.Add(deletedEntity);
             } catch (Exception exception) {
                 failures.Add(
-                        new EntityError<TEntityInterface>(EntityErrorEvents.DELETE_FAILED, entity, exception)
+                        new EntityError<TEntity>(EntityErrorEvents.DELETE_FAILED, entity, exception)
                     );
             }
         }
 
-        return new BatchOperationOutput<TEntityInterface>([.. successes], [.. failures]);
+        return new BatchOperationOutput<TEntity>([.. successes], [.. failures]);
     }
 
-    public async Task<TEntityInterface> Delete(TEntityInterface entity) {
+    public async Task<TEntity> Delete(TEntity entity) {
         _dbSet.Remove((TEntity)entity);
         await _db.SaveChangesAsync();
         return entity;
     }
 
-    public async Task<BatchOperationOutput<TEntityInterface>> Delete(TEntityInterface[] entities) {
-        List<TEntityInterface> successes = [];
-        List<EntityError<TEntityInterface>> failures = [];
+    public async Task<BatchOperationOutput<TEntity>> Delete(TEntity[] entities) {
+        List<TEntity> successes = [];
+        List<EntityError<TEntity>> failures = [];
         foreach (TEntity entity in entities.Cast<TEntity>()) {
 
             try {
@@ -384,7 +383,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
                 successes.Add(success);
             } catch (Exception ex) {
                 failures.Add(
-                        new EntityError<TEntityInterface>(
+                        new EntityError<TEntity>(
                                 EntityErrorEvents.DELETE_FAILED,
                                 entity,
                                 ex
@@ -393,7 +392,7 @@ public abstract class DepotBase<TDatabase, TEntity, TEntityInterface>
             }
         }
 
-        return new BatchOperationOutput<TEntityInterface>([.. successes], [.. failures]);
+        return new BatchOperationOutput<TEntity>([.. successes], [.. failures]);
     }
 
     #endregion

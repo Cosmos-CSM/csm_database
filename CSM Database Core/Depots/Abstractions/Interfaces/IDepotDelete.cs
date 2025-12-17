@@ -4,17 +4,16 @@ using CSM_Database_Core.Entities.Abstractions.Interfaces;
 namespace CSM_Database_Core.Depots.Abstractions.Interfaces;
 
 /// <summary>
-///     Represents deleting logic for a <see cref="IDepot{TEntity, TEntityInterface}"/>.
+///     Represents deleting logic for a <see cref="IDepot{TEntity, TEntity}"/>.
 /// </summary>
 /// <typeparam name="TEntity">
 ///     Type of the <see cref="IEntity"/> handled.
 /// </typeparam>
-/// <typeparam name="TEntityInterface">
+/// <typeparam name="TEntity">
 ///     Type of the <see cref="IEntity"/> interface handled.
 /// </typeparam>
-public interface IDepotDelete<TEntity, TEntityInterface>
-    where TEntity : class, TEntityInterface
-    where TEntityInterface : IEntity {
+public interface IDepotDelete<TEntity>
+    where TEntity : class, IEntity {
 
     /// <summary>
     ///     Deletes from data storages a(n) <typeparamref name="TEntity"/> based on the given <paramref name="id"/>.
@@ -25,7 +24,7 @@ public interface IDepotDelete<TEntity, TEntityInterface>
     /// <returns>
     ///     Deleted <see cref="IEntity"/> data.
     /// </returns>
-    public Task<TEntityInterface> Delete(long id);
+    public Task<TEntity> Delete(long id);
 
     /// <summary>
     ///     Deletes from data storages a collection of <typeparamref name="TEntity"/> based on the given <paramref name="ids"/>.
@@ -36,7 +35,7 @@ public interface IDepotDelete<TEntity, TEntityInterface>
     /// <returns>
     ///     Batch delete output.
     /// </returns>
-    public Task<BatchOperationOutput<TEntityInterface>> Delete(long[] ids);
+    public Task<BatchOperationOutput<TEntity>> Delete(long[] ids);
 
     /// <summary>
     ///     Deletes from data storages the given <paramref name="entity"/>.
@@ -47,7 +46,7 @@ public interface IDepotDelete<TEntity, TEntityInterface>
     /// <returns>
     ///     Deleted <typeparamref name="TEntity"/> data.
     /// </returns>
-    public Task<TEntityInterface> Delete(TEntityInterface entity);
+    public Task<TEntity> Delete(TEntity entity);
 
     /// <summary>
     ///     Deletes from data storages the given collection of <paramref name="entities"/>.
@@ -58,7 +57,7 @@ public interface IDepotDelete<TEntity, TEntityInterface>
     /// <returns>
     ///     Batch delete output.
     /// </returns>
-    public Task<BatchOperationOutput<TEntityInterface>> Delete(TEntityInterface[] entities);
+    public Task<BatchOperationOutput<TEntity>> Delete(TEntity[] entities);
 
     /// <summary>
     ///     Deletes from data storages <typeparamref name="TEntity"/> based on the given <paramref name="input"/> filters.
@@ -69,5 +68,5 @@ public interface IDepotDelete<TEntity, TEntityInterface>
     /// <returns>
     ///     Batch delete output.
     /// </returns>
-    public Task<BatchOperationOutput<TEntityInterface>> Delete(QueryInput<TEntityInterface, FilterQueryInput<TEntityInterface>> input);
+    public Task<BatchOperationOutput<TEntity>> Delete(QueryInput<TEntity, FilterQueryInput<TEntity>> input);
 }
