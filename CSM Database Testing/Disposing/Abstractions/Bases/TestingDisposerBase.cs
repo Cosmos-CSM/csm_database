@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 
-using CSM_Database_Core.Entities.Abstractions.Bases;
 using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
 using CSM_Database_Testing.Disposing.Abstractions.Interfaces;
@@ -11,40 +10,41 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 namespace CSM_Database_Testing.Disposing.Abstractions.Bases;
 
 /// <summary>
-///     Public Delegate for [database] factory [Quality] purposes.
+///     Database context factory delegate.
 /// </summary>
 /// <returns>
-///     The database context instance.
+///     Database context.
 /// </returns>
 public delegate DbContext DatabaseFactory();
 
-/// <summary>
-///     [Abstract] base class to handle [Quality] purposes [Disposer]s implementations.
-/// </summary>
+
+/// <inheritdoc cref="ITestingDisposer"/>
 public abstract class TestingDisposerBase
     : ITestingDisposer {
 
     /// <summary>
-    ///     Current [Disposer] Database factories available.  
+    ///     Entities databases context factories.  
     /// </summary>
-    protected Dictionary<Type, DatabaseFactory> Factories { get; private init; } = [];
+    protected readonly Dictionary<Type, DatabaseFactory> _dbFactories = [];
 
     /// <summary>
-    ///     Current [Disposer] queue entities to dispose related with their databases owners.
+    ///     Current disposition queue order and context.
     /// </summary>
-    protected ConcurrentDictionary<Type, IEntity[]> Queue { get; private init; } = [];
+    protected readonly ConcurrentDictionary<Type, IEntity[]> _queue = [];
 
     /// <summary>
-    ///     Creates a new <see cref="TestingDisposerBase"/> instance, an abtract class handling [Quality] pusposes [Disposing] data behaviors.
+    ///     Creates a new instance.
     /// </summary>
-    /// <param name="Factories"></param>
-    public TestingDisposerBase(params DatabaseFactory[] Factories) {
-        foreach (DatabaseFactory Factory in Factories) {
-            using DbContext instance = Factory();
+    /// <param name="dbFactories">
+    ///     Database contexts used during testing data creation for disposition.
+    /// </param>
+    public TestingDisposerBase(params DatabaseFactory[] dbFactories) {
+        foreach (DatabaseFactory factory in dbFactories) {
+            using DbContext instance = factory();
 
             Type dbType = instance.GetType();
-            this.Factories.Add(dbType, Factory);
-            Queue.AddOrUpdate(
+            _dbFactories.Add(dbType, factory);
+            _queue.AddOrUpdate(
                     dbType,
                     (_) => [],
                     (_, prev) => [.. prev]
@@ -52,29 +52,29 @@ public abstract class TestingDisposerBase
         }
     }
 
-    public void Push(IEntity Record) {
-        if (Factories.ContainsKey(Record.Database)) {
-            Queue.AddOrUpdate(
-                    Record.Database,
-                    (_) => [Record],
-                    (_, prev) => [.. prev, Record]
+    public void Push(IEntity entity) {
+        if (_dbFactories.ContainsKey(entity.Database)) {
+            _queue.AddOrUpdate(
+                    entity.Database,
+                    (_) => [entity],
+                    (_, prev) => [.. prev, entity]
                 );
 
         } else {
-            throw new Exception($"Tried to push a record for Disposition with no subscribed database owning factory ({Record.Database.Name}).");
+            throw new Exception($"Tried to push a record for Disposition with no subscribed database owning factory ({entity.Database.Name}).");
         }
     }
 
-    public void Push(IEntity[] Records) {
-        foreach (IEntity Record in Records) {
+    public void Push(IEntity[] entities) {
+        foreach (IEntity Record in entities) {
             Push(Record);
         }
     }
 
     public void Dispose() {
-        foreach (KeyValuePair<Type, IEntity[]> Database in Queue) {
+        foreach (KeyValuePair<Type, IEntity[]> Database in _queue) {
             Type dbType = Database.Key;
-            DatabaseFactory factory = Factories[dbType];
+            DatabaseFactory factory = _dbFactories[dbType];
 
             using DbContext database = factory();
             IEnumerable<IEntity> committedEntities = Database.Value.Where(i => i.Id > 0).Reverse();

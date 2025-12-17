@@ -1,5 +1,19 @@
 # CSM Foundation Database Testing CHANGELOG
 
+## [3.1.0] - 16.12-2025
+
+### Added
+
+- Added new [BaseDraftUtils] to draft entities based on their base classes, simplifying data mocking.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.0.0            | 2.0.0           |
+| xunit									  | 2.9.3            | 2.9.3           |
+| xunit.SkippableFact   				  | 1.5.23           | 1.5.23          |
+
 ## [3.0.0] - 11.12-2025
 
 ### Changed
