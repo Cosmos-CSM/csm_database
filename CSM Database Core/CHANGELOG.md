@@ -1,5 +1,19 @@
 # CSM Foundation Database CHANGELOG
 
+## [4.1.1] - 22.12-2025
+
+### Patched
+
+- Patched the way DatabaseUtils were locating connection options automatically for database context building, now using the correct application directory and not the assembly directory.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.0.0            | 2.0.0           |
+| Microsoft.EntityFrameworkCore           | 9.0.8            | 10.0.1          |
+| Microsoft.EntityFrameworkCore.SqlServer | 9.0.8            | 10.0.1          |
+
 ## [4.1.0] - 22.12-2025
 
 ### Added
