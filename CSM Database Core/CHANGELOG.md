@@ -1,5 +1,23 @@
 # CSM Foundation Database CHANGELOG
 
+## [4.1.0] - 22.12-2025
+
+### Added
+
+- Added a base class for database design ef context handling.
+
+### Changed
+
+- Updated packages and framework.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.0.0            | 2.0.0           |
+| Microsoft.EntityFrameworkCore           | 9.0.8            | 10.0.1          |
+| Microsoft.EntityFrameworkCore.SqlServer | 9.0.8            | 10.0.1          |
+
 ## [4.0.0] - 11.12-2025
 
 ### Changed
