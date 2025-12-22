@@ -73,37 +73,48 @@ public class DatabaseUtils {
             return GetTestingConnectionOptions(sign);
         }
 
-        string wd = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        string connPath = "";
 
-        string prefix = SystemUtils.GetEnv() switch {
-            SystemEnvs.DEV => Constants.Environments.DEV,
-            SystemEnvs.PROD => Constants.Environments.PROD,
-            SystemEnvs.QA => Constants.Environments.QA,
-            SystemEnvs.LAB => Constants.Environments.LAB,
-            _ => DevelopmentPrefix,
-        };
+        string envVarName = $"{sign}_design_connection";
+        string? envVarVal = SystemUtils.GetVar(envVarName.ToLower());
 
-        string fn = $"{prefix}.connection.json";
+        connPath = envVarVal ?? "";
 
-        if (wd is null) {
-            throw new ArgumentNullException(wd);
+        if (string.IsNullOrWhiteSpace(connPath)) {
+            string appDir = AppContext.BaseDirectory;
+
+            string envPrefix = SystemUtils.GetEnv() switch {
+                SystemEnvs.DEV => Constants.Environments.DEV,
+                SystemEnvs.PROD => Constants.Environments.PROD,
+                SystemEnvs.QA => Constants.Environments.QA,
+                SystemEnvs.LAB => Constants.Environments.LAB,
+                _ => DevelopmentPrefix,
+            };
+
+            string fileName = $"{sign.ToLower()}.{envPrefix}.connection.json";
+            string[] appDirFiles = Directory.GetFiles(appDir);
+            string appDirConnFile = appDirFiles
+                .Where(i => i == fileName)
+                .FirstOrDefault()
+                ?? throw new FileNotFoundException($"{appDir}\\{fileName} not in app assemblies");
+
+            connPath = appDirConnFile;
         }
 
-        string tp = $"{wd}\\{sign.ToUpper()}{DirectoryName}";
-        string? cpd = Directory.GetDirectories(wd)
-            .Where(i => i == tp)
-            .FirstOrDefault()
-            ?? throw new DirectoryNotFoundException($"{tp} not found in the system");
+        if (string.IsNullOrWhiteSpace(connPath)) {
+            ConsoleUtils.Error(
+                    "Unable to locate the connection options file path",
+                    details: new Dictionary<string, object?> {
+                        { "Environment Variable Name", envVarName },
+                        { "Environment Variable Value", envVarVal },
+                        { "App Directory", AppContext.BaseDirectory },
+                        { "Signature", sign },
+                    }
+                );
+            throw new ArgumentNullException(connPath);
+        }
 
-        string tfn = $"{tp}\\{fn}";
-
-        string[] cfs = Directory.GetFiles(cpd);
-        string cpfi = cfs
-            .Where(i => i == tfn)
-            .FirstOrDefault()
-            ?? throw new FileNotFoundException($"{tfn} not found in the system");
-
-        using FileStream pfs = new(cpfi, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using FileStream pfs = new(connPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         ConnectionOptions? m = JsonSerializer.Deserialize<ConnectionOptions>(pfs);
         pfs.Dispose();
 
