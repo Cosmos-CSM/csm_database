@@ -4,7 +4,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <RootNamespace>CSM_Database_Testing</RootNamespace>
 		<PackageId>CSM.Database.Testing</PackageId>
-		<Version>4.1.1</Version>
+		<Version>4.1.2</Version>
 		<Authors>Renato Urrea</Authors>
 		<Company>Cosmos (CSM)</Company>
 		<RepositoryUrl>https://github.com/Cosmos-CSM/csm_database</RepositoryUrl>
