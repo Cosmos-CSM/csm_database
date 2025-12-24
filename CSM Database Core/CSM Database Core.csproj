@@ -4,7 +4,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <RootNamespace>CSM_Database_Core</RootNamespace>
 	    <PackageId>CSM.Database.Core</PackageId>
-		<Version>4.1.1</Version>
+		<Version>4.1.2</Version>
 		<Authors>Renato Urrea</Authors>
 		<Company>Cosmos (CSM)</Company>
 		<RepositoryUrl>https://github.com/Cosmos-CSM/csm_database</RepositoryUrl>
@@ -20,7 +20,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CSM.Foundation.Core" Version="2.0.0" />
+		<PackageReference Include="CSM.Foundation.Core" Version="2.1.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.1" />
 	</ItemGroup>
