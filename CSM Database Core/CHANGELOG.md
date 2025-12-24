@@ -1,5 +1,19 @@
 # CSM Foundation Database CHANGELOG
 
+## [4.1.2] - 24.12-2025
+
+### Patched
+
+- Patched connection options tracing when the file is configured at machine / user environment variables.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.0.0            | 2.1.0           |
+| Microsoft.EntityFrameworkCore           | 9.0.8            | 10.0.1          |
+| Microsoft.EntityFrameworkCore.SqlServer | 9.0.8            | 10.0.1          |
+
 ## [4.1.1] - 22.12-2025
 
 ### Patched
