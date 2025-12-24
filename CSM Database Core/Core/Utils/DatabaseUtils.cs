@@ -73,14 +73,29 @@ public class DatabaseUtils {
             return GetTestingConnectionOptions(sign);
         }
 
-        string connPath = "";
+        string envVarName = $"{sign}_design_connection".ToLower();
+        string filePath = "";
+        EnvironmentVariableTarget[] envVarTargetsSequence = [
+                EnvironmentVariableTarget.Machine,
+                EnvironmentVariableTarget.User,
+                EnvironmentVariableTarget.Process,
+            ];
 
-        string envVarName = $"{sign}_design_connection";
-        string? envVarVal = SystemUtils.GetVar(envVarName.ToLower());
+        string? envVarValue = null;
+        EnvironmentVariableTarget? usedEnvTarget = null;
+        foreach (EnvironmentVariableTarget envTargetSeq in envVarTargetsSequence) {
+            if (!string.IsNullOrWhiteSpace(filePath))
+                break;
 
-        connPath = envVarVal ?? "";
+            envVarValue = SystemUtils.GetVar(envVarName, envTargetSeq);
+            if (!string.IsNullOrWhiteSpace(envVarValue)) {
+                filePath = envVarValue;
+                usedEnvTarget = envTargetSeq;
+                break;
+            }
+        }
 
-        if (string.IsNullOrWhiteSpace(connPath)) {
+        if (string.IsNullOrWhiteSpace(filePath)) {
             string appDir = AppContext.BaseDirectory;
 
             string envPrefix = SystemUtils.GetEnv() switch {
@@ -98,23 +113,24 @@ public class DatabaseUtils {
                 .FirstOrDefault()
                 ?? throw new FileNotFoundException($"{appDir}\\{fileName} not in app assemblies");
 
-            connPath = appDirConnFile;
+            filePath = appDirConnFile;
         }
 
-        if (string.IsNullOrWhiteSpace(connPath)) {
+        if (string.IsNullOrWhiteSpace(filePath)) {
             ConsoleUtils.Error(
                     "Unable to locate the connection options file path",
                     details: new Dictionary<string, object?> {
                         { "Environment Variable Name", envVarName },
-                        { "Environment Variable Value", envVarVal },
+                        { "Environment Variable Value", envVarValue },
+                        { "Environment Variable Target", usedEnvTarget },
                         { "App Directory", AppContext.BaseDirectory },
                         { "Signature", sign },
                     }
                 );
-            throw new ArgumentNullException(connPath);
+            throw new ArgumentNullException(filePath);
         }
 
-        using FileStream pfs = new(connPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using FileStream pfs = new(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         ConnectionOptions? m = JsonSerializer.Deserialize<ConnectionOptions>(pfs);
         pfs.Dispose();
 
