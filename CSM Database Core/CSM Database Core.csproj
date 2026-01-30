@@ -4,7 +4,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <RootNamespace>CSM_Database_Core</RootNamespace>
 	    <PackageId>CSM.Database.Core</PackageId>
-		<Version>4.2.0</Version>
+		<Version>4.2.1</Version>
 		<Authors>Renato Urrea</Authors>
 		<Company>Cosmos (CSM)</Company>
 		<RepositoryUrl>https://github.com/Cosmos-CSM/csm_database</RepositoryUrl>
