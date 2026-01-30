@@ -1,4 +1,18 @@
-# CSM Foundation Database CHANGELOG
+# CSM Database CHANGELOG
+
+## [4.2.0] - 29.01-2026
+
+### Patched
+
+- Patched an error that was throwing errors about never finding connection options for Databases when searching at application assemblies.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.0.0            | 2.1.0           |
+| Microsoft.EntityFrameworkCore           | 9.0.8            | 10.0.1          |
+| Microsoft.EntityFrameworkCore.SqlServer | 9.0.8            | 10.0.1          |
 
 ## [4.1.2] - 24.12-2025
 

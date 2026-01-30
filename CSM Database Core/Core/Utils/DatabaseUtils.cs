@@ -109,7 +109,7 @@ public class DatabaseUtils {
             string fileName = $"{sign.ToLower()}.{envPrefix}.connection.json";
             string[] appDirFiles = Directory.GetFiles(appDir);
             string appDirConnFile = appDirFiles
-                .Where(i => i == fileName)
+                .Where(i => i.Contains(fileName))
                 .FirstOrDefault()
                 ?? throw new FileNotFoundException($"{appDir}\\{fileName} not in app assemblies");
 
