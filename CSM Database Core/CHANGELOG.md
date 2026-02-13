@@ -1,5 +1,19 @@
 # CSM Database CHANGELOG
 
+## [4.2.3] - 13.02-2026
+
+### Fixed
+
+- Fixed an issue with [EntityError] that was not passing the [Exception] caught to its base, causing error handling errors.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.0.0            | 2.1.0           |
+| Microsoft.EntityFrameworkCore           | 10.0.1           | 10.0.3          |
+| Microsoft.EntityFrameworkCore.SqlServer | 10.0.1           | 10.0.3          |
+
 ## [4.2.0] - 29.01-2026
 
 ### Patched

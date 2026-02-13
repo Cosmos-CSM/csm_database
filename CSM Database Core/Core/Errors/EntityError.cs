@@ -54,7 +54,7 @@ public class EntityError<TEntity>
     ///     <see cref="Exception"/> caught over the operation error.
     /// </param>
     public EntityError(EntityErrorEvents @event, TEntity entity, Exception exception)
-        : base($"An entity ({entity.GetType()}) operation has failed", @event) {
+        : base($"An entity ({entity.GetType()}) operation has failed", @event, exception) {
 
         Entity = entity;
 
