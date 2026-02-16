@@ -12,6 +12,7 @@ using CSM_Database_Core.Entities.Abstractions.Interfaces;
 using CSM_Database_Testing.Disposing.Abstractions.Bases;
 
 using Xunit;
+using Xunit.Sdk;
 
 namespace CSM_Database_Testing.Abstractions.Bases;
 
@@ -680,9 +681,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         );
     }
 
-    [SkippableFact(DisplayName = "[View]: Using Property filter (Contains)")]
+    [Fact(DisplayName = "[View]: Using Property filter (Contains)")]
     public async Task ViewE() {
-        Skip.If(_evaluableProperty.PropertyType != typeof(string), "This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
+        if(_evaluableProperty.PropertyType != typeof(string)) {
+            throw SkipException.ForSkip("This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
+        }
 
         TEntity sampleEntity = Store(EntityFactory);
         object? sampleValue = _evaluableProperty.GetValue(sampleEntity);
@@ -713,9 +716,12 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         );
     }
 
-    [SkippableFact(DisplayName = "[View]: Using filter Linear Evaluation (OR)")]
+    [Fact(DisplayName = "[View]: Using filter Linear Evaluation (OR)")]
     public async Task ViewF() {
-        Skip.If(_evaluableProperty.PropertyType != typeof(string), "This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
+        if(_evaluableProperty.PropertyType != typeof(string)) {
+            throw SkipException.ForSkip("This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
+        }
+
         TEntity[] entities = await Store(2, EntityFactory);
 
         List<object?> possibleValues = [];

@@ -1,5 +1,19 @@
 # CSM Database Testing CHANGELOG
 
+## [5.0.0] - 15.02-2026
+
+### Changed
+
+- Removed [xunit] and [SkippableFact] packages for [xunit.v3] upgrade.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.1.0            | 2.1.0           |
+| xunit.v3								  | -.-.-            | 3.2.2           |
+| xunit									  | x.x.x            | x.x.x           |
+
 ## [4.1.1] - 24.12-2025
 
 ### Changed
