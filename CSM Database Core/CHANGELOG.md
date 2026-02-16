@@ -1,5 +1,19 @@
 # CSM Database CHANGELOG
 
+## [4.3.0] - 16.02-2026
+
+### Fixed
+
+- Added [EntityBase{IEntity}] to correctly implement [Clone] features from [ObjectBase].
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.1.0            | 2.1.0           |
+| Microsoft.EntityFrameworkCore           | 10.0.3           | 10.0.3          |
+| Microsoft.EntityFrameworkCore.SqlServer | 10.0.3           | 10.0.3          |
+
 ## [4.2.3] - 13.02-2026
 
 ### Fixed
