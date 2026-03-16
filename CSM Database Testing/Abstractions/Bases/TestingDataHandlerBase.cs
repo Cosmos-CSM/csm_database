@@ -1,12 +1,8 @@
-﻿using CSM_Database_Core.Core.Utils;
-using CSM_Database_Core.Entities.Abstractions.Interfaces;
+﻿using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
 using CSM_Database_Testing.Disposing;
 using CSM_Database_Testing.Disposing.Abstractions.Bases;
-
-using CSM_Foundation_Core.Core.Utils;
-
-using Microsoft.EntityFrameworkCore;
+using CSM_Database_Testing.Managers;
 
 namespace CSM_Database_Testing.Abstractions.Bases;
 
@@ -35,158 +31,50 @@ public class TestingDataHandlerBase
     : IDisposable {
 
     /// <summary>
-    ///     Quality disposition data manager, used to store to-remove entries after tests finished.
+    ///     Testing data disposition manager, used to store to-remove entries after tests finished.
     /// </summary>
-    protected readonly TestingDisposer Disposer;
+    protected readonly TestingDisposer _disposer;
 
     /// <summary>
-    ///     Database factories available for Samples Storing/Disposing.
+    ///     Testing data store manager.
     /// </summary>
-    protected readonly Dictionary<Type, DatabaseFactory> Factories = [];
+    protected readonly TestingStoreManager _storeManager;
 
     /// <summary>
     ///     Creates a new instance.
     /// </summary>
-    /// <param name="Factories">
+    /// <param name="dbFactories">
     ///     Collection of databases factories available for the handler to operate data.
     /// </param>
-    public TestingDataHandlerBase(params DatabaseFactory[] Factories) {
-        foreach (DatabaseFactory factory in Factories) {
-            using DbContext dbContext = factory();
-            Type dbType = dbContext.GetType();
-
-            this.Factories.Add(dbType, factory);
-        }
-
-        Disposer = new TestingDisposer(Factories);
+    public TestingDataHandlerBase(params DatabaseFactory[] dbFactories) {
+        _disposer = new TestingDisposer(dbFactories);
+        _storeManager = new TestingStoreManager(_disposer, dbFactories);
     }
 
     /// <inheritdoc/>
     public void Dispose() {
-        Disposer.Dispose();
+        _storeManager.Dispose();
         GC.SuppressFinalize(this);
     }
 
-    /// <summary>
-    ///     Internal runner for <see cref="EntityFactory{TEntity}"/> utilizations, automatically sends the [Entropy] parameter. 
-    /// </summary>
-    /// <typeparam name="TEntity2">
-    ///     Type of the [Entity] build by the <paramref name="Factory"/>.
-    /// </typeparam>
-    /// <param name="Factory">
-    ///     [Entity] factory function.
-    /// </param>
-    /// <returns>
-    ///     The generated [Entity] object.
-    /// </returns>
-    protected static TEntity2 RunEntityFactory<TEntity2>(EntityFactory<TEntity2> Factory)
+    /// <inheritdoc cref="TestingStoreManager.Store{TEntity2}(TEntity2)"/>
+    public TEntity2 Store<TEntity2>(TEntity2 entity)
         where TEntity2 : class, IEntity {
 
-        return Factory(RandomUtils.String(16));
+        return _storeManager.Store(entity);
     }
 
-
-    #region Storing
-
-    /// <summary>
-    ///     Stores the given <paramref name="Entity"/> into the database.
-    /// </summary>
-    /// <typeparam name="TEntity2">
-    ///     Type of the [Entity] to store.
-    /// </typeparam>
-    /// <param name="Entity">
-    ///     [Entity] object instance properties to store into the database.
-    /// </param>
-    /// <returns>
-    ///     The stored and updated [Entity] object values. 
-    /// </returns>
-    protected TEntity2 Store<TEntity2>(TEntity2 Entity)
+    /// <inheritdoc cref="TestingStoreManager.Store{TEntity2}(EntityFactory{TEntity2})"/>
+    protected TEntity2 Store<TEntity2>(EntityFactory<TEntity2> entityFactory)
         where TEntity2 : class, IEntity {
 
-        DbContext database = GetDatabase(Entity.Database);
-
-        Entity = DatabaseUtils.SanitizeEntity(database, Entity);
-        database.Set<TEntity2>().Add(Entity);
-        database.SaveChanges();
-
-        Disposer.Push(Entity);
-
-        return Entity;
+        return _storeManager.Store(entityFactory);
     }
 
-    /// <summary>
-    ///     Stores the [Entity] resulted by the <paramref name="EntityFactory"/>.
-    /// </summary>
-    /// <typeparam name="TEntity2">
-    ///     Type of the [Entity] to store.
-    /// </typeparam>
-    /// <param name="EntityFactory">
-    ///     Factory to build the [Entity] to store.
-    /// </param>
-    /// <returns>
-    ///     The stored and updated [Entity] object. 
-    /// </returns>
-    protected TEntity2 Store<TEntity2>(EntityFactory<TEntity2> EntityFactory)
-        where TEntity2 : class, IEntity {
-
-        TEntity2 toStore = RunEntityFactory(EntityFactory);
-        toStore = Store(toStore);
-
-        return toStore;
-    }
-
-    /// <summary>
-    ///     Iterates based on <paramref name="Quantity"/> to generate [Entities] to store based on <paramref name="EntityFactory"/>.
-    /// </summary>
-    /// <typeparam name="TEntity2">
-    ///     Type of the [Entity] to store.
-    /// </typeparam>
-    /// <param name="Quantity">
-    ///     Quantity of iterations to call <paramref name="EntityFactory"/> and store the factory result.
-    /// </param>
-    /// <param name="EntityFactory">
-    ///     Factory to build the [Entity] to store.
-    /// </param>
-    /// <returns>
-    ///     The stored and updated [Entities] stored.
-    /// </returns>
-    protected async Task<TEntity2[]> Store<TEntity2>(int Quantity, EntityFactory<TEntity2> EntityFactory)
+    /// <inheritdoc cref="TestingStoreManager.Store{TEntity2}(int, EntityFactory{TEntity2})"/>
+    protected async Task<TEntity2[]> Store<TEntity2>(int quantity, EntityFactory<TEntity2> entityFactory)
         where TEntity2 : class, IEntity, new() {
 
-        List<TEntity2> entities = [];
-
-        using DbContext database = GetDatabase(new TEntity2().Database);
-        for (int i = 0; i < Quantity; i++) {
-
-            TEntity2 entity = RunEntityFactory(EntityFactory);
-            entity = DatabaseUtils.SanitizeEntity(database, entity);
-            entities.Add(entity);
-        }
-
-        await database.Set<TEntity2>().AddRangeAsync(entities);
-        await database.SaveChangesAsync();
-        Disposer.Push([.. entities]);
-
-        return [.. entities];
-    }
-
-    #endregion
-
-    /// <summary>
-    ///    Retrieves the database instance for the given <paramref name="databaseType"/> based on the subscribed DatabaseFactories.
-    /// </summary>
-    /// <param name="databaseType">
-    ///     <see cref="Type"/> of the database requested.
-    /// </param>
-    /// <returns>
-    ///     The matched <see cref="Type"/> database context instance.
-    /// </returns>
-    /// <exception cref="Exception">
-    ///     Thrown when the requested database <see cref="Type"/> isn't found in the subcribed database factories.
-    /// </exception>
-    DbContext GetDatabase(Type databaseType) {
-        return !Factories.TryGetValue(databaseType, out DatabaseFactory? factory)
-            ? throw new Exception($"No factory subscribed for [({databaseType.Name})]")
-            : factory();
+        return await _storeManager.Store(quantity, entityFactory);
     }
 }

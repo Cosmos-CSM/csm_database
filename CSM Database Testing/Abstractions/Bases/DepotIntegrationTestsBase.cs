@@ -10,6 +10,7 @@ using CSM_Database_Core.Depots.ViewFilters;
 using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
 using CSM_Database_Testing.Disposing.Abstractions.Bases;
+using CSM_Database_Testing.Managers;
 
 using Xunit;
 using Xunit.Sdk;
@@ -122,7 +123,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     /// <param name="SampleEntities"></param>
     protected async Task CommitSampleEntities(ICollection<IEntity> SampleEntities) {
         await _database.SaveChangesAsync();
-        Disposer.Push([.. SampleEntities]);
+        _disposer.Push([.. SampleEntities]);
     }
 
     /// <summary>
@@ -180,7 +181,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     ///     This <see cref="IEntity"/> instance is created but not stored in the database.
     /// </remarks>
     protected TEntity Sampling() {
-        return RunEntityFactory(EntityFactory);
+        return TestingStoreManager.RunEntityFactory(EntityFactory);
     }
 
     /// <summary>
@@ -196,7 +197,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     ///     This <see cref="IEntity"/> instance collection is created but not stored in the database.
     /// </remarks>
     protected TEntity[] Sampling(int Count) {
-        return [.. Enumerable.Range(0, Count).Select(_ => RunEntityFactory(EntityFactory))];
+        return [.. Enumerable.Range(0, Count).Select(_ => TestingStoreManager.RunEntityFactory(EntityFactory))];
     }
 
     #endregion
@@ -426,7 +427,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     /// </summary>
     [Fact(DisplayName = $"[Update Single]: Created when (Create) property enabled")]
     public virtual async Task Update_Single_OnCreateEnabled_Success() {
-        TEntity sample = RunEntityFactory(EntityFactory);
+        TEntity sample = TestingStoreManager.RunEntityFactory(EntityFactory);
 
         UpdateOutput<TEntity> updateOutput = await _depot.Update(
                 new QueryInput<TEntity, UpdateInput<TEntity>> {
@@ -457,7 +458,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     /// </summary>
     [Fact(DisplayName = $"[Update Single]: Throws exception (CREATE_DISABLED).")]
     public virtual async Task Update_Single_OnCreateDisabled_ErrorCreateDisabled() {
-        TEntity sample = RunEntityFactory(EntityFactory);
+        TEntity sample = TestingStoreManager.RunEntityFactory(EntityFactory);
 
         DepotError<TEntity> depotException = await Assert.ThrowsAsync<DepotError<TEntity>>(
                 async () => {
@@ -480,7 +481,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     /// </summary>
     [Fact(DisplayName = $"[Update Single]: Throws exception (UNFOUND)")]
     public virtual async Task Update_Single_ErrorUnfound() {
-        TEntity sample = RunEntityFactory(EntityFactory);
+        TEntity sample = TestingStoreManager.RunEntityFactory(EntityFactory);
         sample.Id = await GeneratePointer();
 
         DepotError<TEntity> depotException = await Assert.ThrowsAsync<DepotError<TEntity>>(
