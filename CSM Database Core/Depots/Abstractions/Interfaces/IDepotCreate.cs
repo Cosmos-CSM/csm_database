@@ -5,13 +5,10 @@ namespace CSM_Database_Core.Depots.Abstractions.Interfaces;
 
 
 /// <summary>
-///     Represents create logic for a <see cref="IDepot{TEntity, TEntity}"/>.
+///     Represents create logic for a <see cref="IDepot{TEntity}"/>.
 /// </summary>
 /// <typeparam name="TEntity">
-///     Type of the <see cref="IEntity""/> type being handled.
-/// </typeparam>
-/// <typeparam name="TEntity">
-///     Type of the <see cref="IEntity"/> interface type being handled.
+///     Type of the <see cref="IEntity"/> type being handled.
 /// </typeparam>
 public interface IDepotCreate<TEntity>
     where TEntity : class, IEntity {

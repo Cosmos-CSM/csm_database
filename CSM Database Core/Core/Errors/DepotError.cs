@@ -18,7 +18,7 @@ public enum DepotErrorEvents {
 
     /// <summary>
     ///     Usedn when at an Update operation the <see cref="IEntity"/> given has <see cref="IEntity.Id"/> 0
-    ///     (wich usually means a new entity creation) but <seealso cref="UpdateInput.Create"/> is set to false.
+    ///     (wich usually means a new entity creation) but <seealso cref="Depots.Models.UpdateInput{TEntity}.Create"/> is set to false.
     /// </summary>
     CREATE_DISABLED,
 }
@@ -66,6 +66,7 @@ public class DepotError<TEntity>
             ) {
     }
 
+    /// <inheritdoc/>
     protected override Dictionary<DepotErrorEvents, string> BuildAdviseContext() {
         return new Dictionary<DepotErrorEvents, string> {
             {

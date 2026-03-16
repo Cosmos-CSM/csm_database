@@ -40,6 +40,14 @@ public class EntityValidationError
     ///     Creates a new instance.
     /// </summary>
     /// <param name="entityType">
+    ///     Type of the entity that thrown the error.
+    /// </param>
+    /// <param name="event">
+    ///     Error event.
+    /// </param>
+    /// <param name="results">
+    ///     Error validation results.
+    /// </param>
     public EntityValidationError(Type entityType, EntityValidationErrorEvents @event, PropertyValidationResult[] results)
         : base($"Entity ({entityType}) validation has failed.", @event) {
 

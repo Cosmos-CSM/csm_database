@@ -8,5 +8,6 @@ namespace CSM_Database_Core.Entities.Abstractions.Bases;
 public abstract class ActivableEntityBase
     : EntityBase, IEntity, IActivableEntity {
 
+    /// <inheritdoc/>
     public bool IsEnabled { get; set; } = false;
 }

@@ -6,13 +6,11 @@ namespace CSM_Database_Core.Entities.Abstractions.Bases;
 ///     Represents an <see cref="IEntity"/> with catalog identification properties.
 /// </summary>
 public abstract class CatalogEntityBase
-    : EntityBase, ICatalogEntity {
+    : NamedEntityBase, ICatalogEntity {
 
-    public string Name { get; set; } = string.Empty;
-
-    public string? Description { get; set; }
-
+    /// <inheritdoc/>
     public string Reference { get; set; } = string.Empty;
 
+    /// <inheritdoc/>
     public bool IsEnabled { get; set; }
 }

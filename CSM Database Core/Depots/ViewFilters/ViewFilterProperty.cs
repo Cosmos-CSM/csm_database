@@ -52,7 +52,10 @@ public class ViewFilterProperty<T>
     : IViewFilter<T>
     where T : IEntity {
 
+    /// <inheritdoc/>
     public string Discriminator { get; init; } = typeof(ViewFilterLogical<T>).Name;
+
+    /// <inheritdoc/>
     public int Order { get; set; }
 
     /// <summary>
@@ -70,6 +73,7 @@ public class ViewFilterProperty<T>
     /// </summary>
     public required ViewFilterOperators Operator { get; set; }
 
+    /// <inheritdoc/>
     public Expression<Func<T, bool>> Compose() {
         ParameterExpression param = Expression.Parameter(typeof(T), "X");
 

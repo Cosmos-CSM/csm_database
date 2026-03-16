@@ -28,7 +28,7 @@ namespace CSM_Database_Testing.Abstractions.Bases;
 /// <typeparam name="TDatabase">
 ///     Type of the <see cref="CSM_Database_Core.Abstractions.Interfaces.IDatabase"/> handling the <typeparamref name="TDepot"/>.
 /// </typeparam>
-public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
+public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     : TestingDataHandlerBase
     where TEntity : class, IEntity, new()
     where TDepot : IDepot<TEntity>
@@ -45,23 +45,20 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
     protected readonly TDatabase _database;
 
     /// <summary>
-    ///     Stores the most valid evaluable property from the current <see cref="TEntity"/>. used for ordering and filtering at View operations and evaluate their quality.
+    ///     Stores the most valid evaluable property from the current  <typeparamref name="TEntity"/>. used for ordering and filtering at View operations and evaluate their quality.
     /// </summary>
     protected readonly PropertyInfo _evaluableProperty;
 
     /// <summary>
-    ///     Generates a new behavior base for <see cref="TestingDepotBase{TMigrationSet, TMigrationDepot, TMigrationDatabases}"/>.
+    ///     Generates a new behavior base for <see cref="DepotIntegrationTestsBase{TMigrationSet, TMigrationDepot, TMigrationDatabases}"/>.
     /// </summary>
     /// <param name="factories">
-    ///     Database factories for relations sampleEntity at external databases needed for <see cref="TEntity"/>.
-    /// </param>
-    /// <param name="sign">
-    ///     Database sign for identification purposes.
+    ///     Database factories for relations sampleEntity at external databases needed for <typeparamref name="TEntity"/>.
     /// </param>
     /// <param name="database">
-    ///     Main Entity <see cref="TEntity"/> database handler instance. If isn't given will use a default built instance.
+    ///     Main Entity <typeparamref name="TEntity"/> database handler instance. If isn't given will use a default built instance.
     /// </param>
-    public TestingDepotBase(DatabaseFactory? database = null, params DatabaseFactory[] factories)
+    public DepotIntegrationTestsBase(DatabaseFactory? database = null, params DatabaseFactory[] factories)
         : base(
             [
                 ..factories,
@@ -111,7 +108,7 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
     ///     Random 16 length value for unique properties.
     /// </param>
     /// <returns>
-    ///     A correctly built <see cref="TEntity"/>.
+    ///     A correctly built <typeparamref name="TEntity"/>.
     /// </returns>
     protected abstract TEntity EntityFactory(string Entropy);
 
@@ -176,9 +173,9 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
     #region Sampling
 
     /// <summary>
-    ///     Creates a new <see cref="TEntity"/> instance based on the <see cref="EntityFactory(string)"/> implementation.
+    ///     Creates a new <typeparamref name="TEntity"/> instance based on the <see cref="EntityFactory(string)"/> implementation.
     /// </summary>
-    /// <returns> A new <see cref="TEntity"/> instance </returns>
+    /// <returns> A new <typeparamref name="TEntity"/> instance </returns>
     /// <remarks>
     ///     This <see cref="IEntity"/> instance is created but not stored in the database.
     /// </remarks>
@@ -187,13 +184,13 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
     }
 
     /// <summary>
-    ///    Creates a new collection of <see cref="TEntity"/> instances based on the <see cref="EntityFactory(string)"/> implementation.
+    ///    Creates a new collection of <typeparamref name="TEntity"/> instances based on the <see cref="EntityFactory(string)"/> implementation.
     /// </summary>
     /// <param name="Count">
     ///     Number of instances to create.
     /// </param>
     /// <returns>
-    ///     A new <see cref="TEntity"/> instance collection.
+    ///     A new <typeparamref name="TEntity"/> instance collection.
     /// </returns>
     /// <remarks>
     ///     This <see cref="IEntity"/> instance collection is created but not stored in the database.
@@ -204,9 +201,13 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
 
     #endregion
 
-    #region Q_Base Create
+    #region Create Base Tests
 
-    [Fact(DisplayName = "[Create]: Record created and unique store check")]
+    /// <summary>
+    ///     Method: <see cref="IDepotCreate{TEntity}.Create(TEntity)"/> 
+    ///     Expectation: Success creation.
+    /// </summary>
+    [Fact(DisplayName = "[Create Single]: Entity created")]
     public async Task CreateA() {
         TEntity sample = Sampling();
 
@@ -228,7 +229,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         );
     }
 
-    [Fact(DisplayName = "[Create]: Multiple records created")]
+    /// <summary>
+    ///     Method: <see cref="IDepotCreate{TEntity}.Create(ICollection{TEntity}, bool)"/> 
+    ///     Expectation: Success creation.
+    /// </summary>
+    [Fact(DisplayName = "[Create Batch]: Entities created")]
     public async Task CreateB() {
         TEntity[] samples = Sampling(3);
 
@@ -246,9 +251,13 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
 
     #endregion
 
-    #region Q_Base Read
+    #region Read Base Tests
 
-    [Fact(DisplayName = "[Read]: Reads an Entity by {Id}.")]
+    /// <summary>
+    ///     Method: <see cref="IDepotRead{TEntity}.Read(long)"/> 
+    ///     Expectation: Success reading.
+    /// </summary>
+    [Fact(DisplayName = "[Read Single]: Entity read by (Id)")]
     public virtual async Task ReadA() {
         TEntity sample = Store(EntityFactory);
 
@@ -266,7 +275,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
             );
     }
 
-    [Fact(DisplayName = "[Read]: Reads a collection of entities by a collection of {Id}")]
+    /// <summary>
+    ///     Method: <see cref="IDepotRead{TEntity}.Read(long[])"/> 
+    ///     Expectation: Success reading.
+    /// </summary>
+    [Fact(DisplayName = "[Read Batch]: Entities read by (Id)")]
     public virtual async Task ReadB() {
         TEntity[] samples = await Store(20, EntityFactory);
         long[] sampleIds = [.. samples.Select(i => i.Id)];
@@ -293,7 +306,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
             );
     }
 
-    [Fact(DisplayName = "[Read]: Reads for the first entity matching the filter")]
+    /// <summary>
+    ///     Method: <see cref="IDepotRead{TEntity}.Read(QueryInput{TEntity, FilterQueryInput{TEntity}})"/> 
+    ///     Expectation: Success reading.
+    /// </summary>
+    [Fact(DisplayName = "[Read Batch]: Entities read by (Query [First matching])")]
     public virtual async Task ReadC() {
         TEntity[] samples = await Store(2, EntityFactory);
         TEntity samplePivot = samples[0];
@@ -325,7 +342,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
             );
     }
 
-    [Fact(DisplayName = "[Read]: Reads for the last entity matching the filter")]
+    /// <summary>
+    ///     Method: <see cref="IDepotRead{TEntity}.Read(QueryInput{TEntity, FilterQueryInput{TEntity}})"/> 
+    ///     Expectation: Success reading.
+    /// </summary>
+    [Fact(DisplayName = "[Read Batch]: Entities read by (Query [Last matching])")]
     public virtual async Task ReadD() {
         TEntity[] samples = await Store(2, EntityFactory);
         TEntity samplePivot = samples[1];
@@ -357,7 +378,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
             );
     }
 
-    [Fact(DisplayName = "[Read]: Reads for all entities matching the filter")]
+    /// <summary>
+    ///     Method: <see cref="IDepotRead{TEntity}.Read(QueryInput{TEntity, FilterQueryInput{TEntity}})"/> 
+    ///     Expectation: Success reading.
+    /// </summary>
+    [Fact(DisplayName = "[Read Batch]: Entities read by (Query [All matching])")]
     public virtual async Task ReadE() {
         TEntity[] samples = await Store(2, EntityFactory);
 
@@ -393,9 +418,13 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
 
     #endregion
 
-    #region Q_Base Update
+    #region Update Base Tests
 
-    [Fact(DisplayName = $"[Update Entity]: Created when Create parameter enabled")]
+    /// <summary>
+    ///     Method: <see cref="IDepotUpdate{TEntity}.Update(QueryInput{TEntity, UpdateInput{TEntity}})"/> 
+    ///     Expectation: Succeess created.
+    /// </summary>
+    [Fact(DisplayName = $"[Update Entity]: Created when (Create) property enabled")]
     public virtual async Task UpdateA() {
         TEntity sample = RunEntityFactory(EntityFactory);
 
@@ -422,7 +451,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
             );
     }
 
-    [Fact(DisplayName = $"[Update Entity]: Throws CreateDisabled exception situation.")]
+    /// <summary>
+    ///     Method: <see cref="IDepotUpdate{TEntity}.Update(QueryInput{TEntity, UpdateInput{TEntity}})"/> 
+    ///     Expectation: Throws (<see cref="DepotError{TEntity}"/>) with event (<see cref="DepotErrorEvents.CREATE_DISABLED"/>)
+    /// </summary>
+    [Fact(DisplayName = $"[Update Entity]: Throws exception (CREATE_DISABLED).")]
     public virtual async Task UpdateB() {
         TEntity sample = RunEntityFactory(EntityFactory);
 
@@ -441,7 +474,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         Assert.Equal(DepotErrorEvents.CREATE_DISABLED, depotException.Event);
     }
 
-    [Fact(DisplayName = $"[Update Entity]: Throws Unfound exception situation")]
+    /// <summary>
+    ///     Method: <see cref="IDepotUpdate{TEntity}.Update(QueryInput{TEntity, UpdateInput{TEntity}})"/> 
+    ///     Expectation: Throws (<see cref="DepotError{TEntity}"/>) with event (<see cref="DepotErrorEvents.UNFOUND"/>)
+    /// </summary>
+    [Fact(DisplayName = $"[Update Single]: Throws exception (UNFOUND)")]
     public virtual async Task UpdateC() {
         TEntity sample = RunEntityFactory(EntityFactory);
         sample.Id = await GeneratePointer();
@@ -460,7 +497,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         Assert.Equal(DepotErrorEvents.UNFOUND, depotException.Event);
     }
 
-    [Fact(DisplayName = $"[Update Entity]: Entity gets updated correctly")]
+    /// <summary>
+    ///     Method: <see cref="IDepotUpdate{TEntity}.Update(QueryInput{TEntity, UpdateInput{TEntity}})"/>
+    ///     Expectation: Success update.
+    /// </summary>
+    [Fact(DisplayName = $"[Update Single]: Entity gets updated correctly")]
     public virtual async Task UpdateD() {
         PropertyInfo ValidEvaluable;
         if (_evaluableProperty.Name == nameof(IEntity.Id)) {
@@ -502,12 +543,15 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
             );
     }
 
-
     #endregion
 
-    #region Q_Base Delete
+    #region Delete Base Tests
 
-    [Fact(DisplayName = $"[Delete Entity]: Using Id throws Unfound situation exception")]
+    /// <summary>
+    ///     Method: <see cref="IDepotDelete{TEntity}.Delete(long)"/> 
+    ///     Expectation: Throws error (<see cref="DepotError{TEntity}"/>) with event (<see cref="DepotErrorEvents.UNFOUND"/>).
+    /// </summary>
+    [Fact(DisplayName = $"[Delete Single]: Throws error (UNFOUND)")]
     public virtual async Task DeleteA() {
         long unexistPointer = await GeneratePointer(true);
 
@@ -520,7 +564,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         Assert.Equal(DepotErrorEvents.UNFOUND, depotException.Event);
     }
 
-    [Fact(DisplayName = $"[Delete Entity]: Deletes correctly an Entity with a given Id")]
+    /// <summary>
+    ///     Method: <see cref="IDepotDelete{TEntity}.Delete(long)"/> 
+    ///     Expectation: Success deleted.
+    /// </summary>
+    [Fact(DisplayName = $"[Delete Single]: Entity deleted by (Id)")]
     public virtual async Task DeleteB() {
         TEntity entity = Store(EntityFactory);
 
@@ -531,7 +579,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         Assert.Null(searchedEntity);
     }
 
-    [Fact(DisplayName = $"[Delete Batch]: Deletes correctly a collection of entities based on a filter")]
+    /// <summary>
+    ///     Method: <see cref="IDepotDelete{TEntity}.Delete(QueryInput{TEntity, FilterQueryInput{TEntity}})"/> 
+    ///     Expectation: Success deleted.
+    /// </summary>
+    [Fact(DisplayName = $"[Delete Batch]: Entities deleted by (Query)")]
     public virtual async Task DeleteC() {
         TEntity entity = (await Store(10, EntityFactory))[0];
 
@@ -565,8 +617,12 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
 
     #endregion
 
-    #region Q_Base View
+    #region View Base Tests
 
+    /// <summary>
+    ///     Method: <see cref="IDepotView{TEntity}.View(QueryInput{TEntity, ViewInput{TEntity}})"/>.
+    ///     Expectation: Success view.
+    /// </summary>
     [Fact(DisplayName = "[View]: Simple view calculation")]
     public async Task ViewA() {
         const int viewPage = 1;
@@ -590,6 +646,10 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         );
     }
 
+    /// <summary>
+    ///     Method: <see cref="IDepotView{TEntity}.View(QueryInput{TEntity, ViewInput{TEntity}})"/>.
+    ///     Expectation: Success view.
+    /// </summary>
     [Fact(DisplayName = "[View]: Specific page selected")]
     public async Task ViewB() {
         const int viewPage = 2;
@@ -613,7 +673,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         );
     }
 
-    [Fact(DisplayName = $"[View]: Specific ordering by property")]
+    /// <summary>
+    ///     Method: <see cref="IDepotView{TEntity}.View(QueryInput{TEntity, ViewInput{TEntity}})"/>.
+    ///     Expectation: Success view.
+    /// </summary>
+    [Fact(DisplayName = $"[View]: Ordering by property")]
     public async Task ViewC() {
 
         ViewOutput<TEntity> orderedViewOutput = await _depot.View(
@@ -655,7 +719,11 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         }
     }
 
-    [Fact(DisplayName = "[View]: Using Date filter")]
+    /// <summary>
+    ///     Method: <see cref="IDepotView{TEntity}.View(QueryInput{TEntity, ViewInput{TEntity}})"/>.
+    ///     Expectation: Success view.
+    /// </summary>
+    [Fact(DisplayName = "[View]: Using date filter")]
     public async Task ViewD() {
         ViewOutput<TEntity> viewOutput = await _depot.View(
                 new QueryInput<TEntity, ViewInput<TEntity>> {
@@ -681,9 +749,13 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         );
     }
 
-    [Fact(DisplayName = "[View]: Using Property filter (Contains)")]
+    /// <summary>
+    ///     Method: <see cref="IDepotView{TEntity}.View(QueryInput{TEntity, ViewInput{TEntity}})"/>.
+    ///     Expectation: Success view.
+    /// </summary>
+    [Fact(DisplayName = "[View]: Using property filter (CONTAINS)")]
     public async Task ViewE() {
-        if(_evaluableProperty.PropertyType != typeof(string)) {
+        if (_evaluableProperty.PropertyType != typeof(string)) {
             throw SkipException.ForSkip("This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
         }
 
@@ -716,9 +788,13 @@ public abstract class TestingDepotBase<TEntity, TDepot, TDatabase>
         );
     }
 
-    [Fact(DisplayName = "[View]: Using filter Linear Evaluation (OR)")]
+    /// <summary>
+    ///     Method: <see cref="IDepotView{TEntity}.View(QueryInput{TEntity, ViewInput{TEntity}})"/>.
+    ///     Expectation: Success view.
+    /// </summary>
+    [Fact(DisplayName = "[View]: Using filter logical (OR)")]
     public async Task ViewF() {
-        if(_evaluableProperty.PropertyType != typeof(string)) {
+        if (_evaluableProperty.PropertyType != typeof(string)) {
             throw SkipException.ForSkip("This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
         }
 

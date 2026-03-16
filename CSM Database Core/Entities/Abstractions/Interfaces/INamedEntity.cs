@@ -1,11 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-using CSM_Database_Core.Entities.Abstractions.Bases;
-
 namespace CSM_Database_Core.Entities.Abstractions.Interfaces;
+
 /// <summary>
-///     Represents an <see cref="IEntity"/> with <see cref="BNamedEntity.Name"/> and <see cref="BNamedEntity.Description"/> properties
-///     that can help to identify a <see cref="IEntity"/> based on <see cref="BNamedEntity.Name"/> property as this defines them as unique.
+///     Represents an <see cref="IEntity"/> with <see cref="Name"/> and <see cref="Description"/>
+///     that can help to identify a <see cref="IEntity"/> based on <see cref="Name"/> property as this defines them as unique.
 /// </summary>
 public interface INamedEntity
     : IEntity {

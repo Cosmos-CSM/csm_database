@@ -7,7 +7,6 @@ using CSM_Database_Core.Core.Utils;
 using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
 using CSM_Foundation_Core.Abstractions.Bases;
-using CSM_Foundation_Core.Abstractions.Interfaces;
 using CSM_Foundation_Core.Core.Utils;
 
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +26,7 @@ public abstract partial class DatabaseBase<TDatabases>
     : DbContext, IDatabase
     where TDatabases : DbContext {
 
+    /// <inheritdoc/>
     public virtual string Sign { get; private set; } = "DBSign";
 
     /// <summary>
@@ -152,6 +152,7 @@ public abstract partial class DatabaseBase<TDatabases>
         return true;
     }
 
+    /// <inheritdoc/>
     public bool Validate(bool strict = true) {
         bool logsOn = DatabaseOptions.EnableLogging;
 
@@ -212,11 +213,12 @@ public abstract partial class DatabaseBase<TDatabases>
     /// </param>
     protected virtual void DesignDatabase(ModelBuilder mBuilder) { }
 
+    /// <inheritdoc/>
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-        string connectionString = DatabaseOptions.ConnectionOptions!.GenerateConnectionString();
+        string connectionString = DatabaseOptions.ConnectionOptions!.ConnectionString;
         optionsBuilder.UseSqlServer(connectionString);
 
-        /// We catch when the execution context is an Entity Framework design runtime.
+        // We catch when the execution context is an Entity Framework design runtime.
         if (AppDomain.CurrentDomain.FriendlyName.Contains("ef")) {
 
             string envValue = SystemUtils.GetVar("ASPNETCORE_ENVIRONMENT") ?? SystemUtils.GetVar("DOTNET_ENVIRONMENT") ?? "---";
@@ -233,6 +235,7 @@ public abstract partial class DatabaseBase<TDatabases>
         }
     }
 
+    /// <inheritdoc/>
     protected override void OnModelCreating(ModelBuilder mBuilder) {
 
         DesignDatabase(mBuilder);
@@ -305,7 +308,7 @@ public abstract partial class DatabaseBase<TDatabases>
     }
 }
 
-/// <inheritdoc cref="Entities.Abstractions.Bases.BEntity"/>
+/// <inheritdoc cref="EntityBase"/>
 public abstract partial class EntityBase
     : ObjectBase<IEntity>, IEntity {
 
@@ -317,7 +320,7 @@ public abstract partial class EntityBase
     ///     Proxy object to configure Entity Model to Entity Framework Core.
     /// </param>
     /// <remarks>
-    ///     Don't describe <see cref="IEntity"/> properties they are being auto-described by the [CSM] engine, <see cref="IEntity.Id"/>, <see cref="IEntity.Timestamp"/> and <see cref="IEntity.Name"/>.
+    ///     Don't describe <see cref="IEntity"/> properties they are being auto-described by the [CSM] engine, <see cref="IEntity.Id"/>, <see cref="IEntity.Timestamp"/> and <see cref="INamedEntity.Name"/>.
     /// </remarks>
     protected internal virtual void DesignEntity(EntityTypeBuilder etBuilder) { }
 }

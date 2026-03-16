@@ -45,7 +45,7 @@ public class TestingDataHandlerBase
     protected readonly Dictionary<Type, DatabaseFactory> Factories = [];
 
     /// <summary>
-    ///     Creates a new <see cref="BQ_DataHandler{TDatabase}"/> instance.
+    ///     Creates a new instance.
     /// </summary>
     /// <param name="Factories">
     ///     Collection of databases factories available for the handler to operate data.
@@ -61,6 +61,7 @@ public class TestingDataHandlerBase
         Disposer = new TestingDisposer(Factories);
     }
 
+    /// <inheritdoc/>
     public void Dispose() {
         Disposer.Dispose();
         GC.SuppressFinalize(this);

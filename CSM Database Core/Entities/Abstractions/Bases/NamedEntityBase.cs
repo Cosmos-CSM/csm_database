@@ -9,7 +9,9 @@ namespace CSM_Database_Core.Entities.Abstractions.Bases;
 public abstract class NamedEntityBase
     : EntityBase, INamedEntity {
 
+    /// <inheritdoc/>
     public string Name { get; set; } = string.Empty;
 
+    /// <inheritdoc/>
     public string? Description { get; set; }
 }

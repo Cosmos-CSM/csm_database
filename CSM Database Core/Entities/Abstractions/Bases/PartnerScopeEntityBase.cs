@@ -17,11 +17,14 @@ public abstract class PartnerScopeEntityBase<TPartnerBridgeEntity>
     : EntityBase, IPartnerScopeEntity<TPartnerBridgeEntity>
     where TPartnerBridgeEntity : IPartnerBridgeEntity {
 
+
+    /// <inheritdoc/>
     public TPartnerBridgeEntity Bridge { get; set; } = default!;
 
-
+    /// <inheritdoc/>
     protected virtual void DesignScopeEntity(EntityTypeBuilder etBuilder) { }
 
+    /// <inheritdoc/>
     protected internal override void DesignEntity(EntityTypeBuilder etBuilder) {
         PropertyInfo[] commonEntityProperties = typeof(TPartnerBridgeEntity).GetProperties();
 
@@ -32,12 +35,13 @@ public abstract class PartnerScopeEntityBase<TPartnerBridgeEntity>
             }
 
             etBuilder.Link(
-                Relation: (GetType(), typeof(TPartnerBridgeEntity)),
-                SourceReference: nameof(Bridge),
-                TargetReference: commonEntityProperty.Name,
-                Required: true,
-                Index: true,
-                Auto: true
+                sourceRelationType: GetType(),
+                targetRelationType: typeof(TPartnerBridgeEntity),
+                sourceRef: nameof(Bridge),
+                targetRef: commonEntityProperty.Name,
+                isRequired: true,
+                isIndex: true,
+                isAutoLoaded: true
             );
         }
 

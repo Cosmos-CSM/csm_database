@@ -21,8 +21,13 @@ public class ViewFilterDate<T>
    : IViewFilter<T>
     where T : IEntity {
 
+    /// <inheritdoc/>
     public string Discriminator { get; init; } = typeof(ViewFilterDate<T>).Name;
+
+    /// <inheritdoc/>
     public string Property { get; set; } = nameof(IEntity.Timestamp);
+
+    /// <inheritdoc/>
     public int Order { get; set; }
 
     /// <summary>
@@ -35,6 +40,7 @@ public class ViewFilterDate<T>
     /// </summary>
     public DateTime? To { get; set; }
 
+    /// <inheritdoc/>
     public Expression<Func<T, bool>> Compose() {
         ParameterExpression param = Expression.Parameter(typeof(T), "X");
         MemberExpression prop = Expression.PropertyOrField(param, Property);

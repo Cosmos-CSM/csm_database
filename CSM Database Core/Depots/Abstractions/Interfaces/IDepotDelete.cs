@@ -4,13 +4,10 @@ using CSM_Database_Core.Entities.Abstractions.Interfaces;
 namespace CSM_Database_Core.Depots.Abstractions.Interfaces;
 
 /// <summary>
-///     Represents deleting logic for a <see cref="IDepot{TEntity, TEntity}"/>.
+///     Represents deleting logic for a <see cref="IDepot{TEntity}"/>.
 /// </summary>
 /// <typeparam name="TEntity">
 ///     Type of the <see cref="IEntity"/> handled.
-/// </typeparam>
-/// <typeparam name="TEntity">
-///     Type of the <see cref="IEntity"/> interface handled.
 /// </typeparam>
 public interface IDepotDelete<TEntity>
     where TEntity : class, IEntity {
@@ -19,7 +16,7 @@ public interface IDepotDelete<TEntity>
     ///     Deletes from data storages a(n) <typeparamref name="TEntity"/> based on the given <paramref name="id"/>.
     /// </summary>
     /// <param name="id">
-    ///     Unique identifier to search for the <see cref="TEntity"/>.
+    ///     Unique identifier to search for the <typeparamref name="TEntity"/>.
     /// </param>
     /// <returns>
     ///     Deleted <see cref="IEntity"/> data.
@@ -30,7 +27,7 @@ public interface IDepotDelete<TEntity>
     ///     Deletes from data storages a collection of <typeparamref name="TEntity"/> based on the given <paramref name="ids"/>.
     /// </summary>
     /// <param name="ids">
-    ///     Unique identifiers to search for the <see cref="TEntity"/>(s).
+    ///     Unique identifiers to search for the <typeparamref name="TEntity"/>.
     /// </param>
     /// <returns>
     ///     Batch delete output.

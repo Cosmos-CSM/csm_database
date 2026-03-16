@@ -40,6 +40,7 @@ public interface IViewFilterNode<TEntity>
 public class IViewFilterNodeConverterFactory
     : JsonConverterFactory {
 
+    /// <inheritdoc/>
     public override bool CanConvert(Type typeToConvert) {
         if (!typeToConvert.IsGenericType) {
             return false;
@@ -49,6 +50,7 @@ public class IViewFilterNodeConverterFactory
         return genericType == typeof(IViewFilterNode<>);
     }
 
+    /// <inheritdoc/>
     public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options) {
         Type itemType = typeToConvert.GetGenericArguments()[0];
         Type converterType = typeof(IViewFilterNodeConverter<>).MakeGenericType(itemType);

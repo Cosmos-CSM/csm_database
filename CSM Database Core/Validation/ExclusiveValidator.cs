@@ -11,12 +11,22 @@ namespace CSM_Database_Core.Validation;
 public class ExclusiveValidator
     : ValidatorBase {
 
+    /// <summary>
+    ///     Group identifier.
+    /// </summary>
     protected readonly string Group;
 
+    /// <summary>
+    ///     Creates a new instance.
+    /// </summary>
+    /// <param name="group">
+    ///     Group identifier.
+    /// </param>
     public ExclusiveValidator(string group = "") {
         Group = group;
     }
 
+    /// <inheritdoc/>
     public override bool Validate(object? value) {
         // Return false if the input value is null.
         if (value == null) return false;
@@ -60,6 +70,7 @@ public class ExclusiveValidator
 
     }
 
+    /// <inheritdoc/>
     public override bool ValidateType(Type Type) {
         return true;
     }

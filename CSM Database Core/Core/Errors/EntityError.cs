@@ -47,6 +47,9 @@ public class EntityError<TEntity>
     /// <summary>
     ///     Creates a new instance.
     /// </summary>
+    /// <param name="event">
+    ///     Error trigger event.
+    /// </param>
     /// <param name="entity">
     ///     Entity instance that has caused the error.
     /// </param>

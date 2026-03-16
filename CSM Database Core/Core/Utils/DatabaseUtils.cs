@@ -14,6 +14,9 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace CSM_Database_Core.Core.Utils;
 
+/// <summary>
+///     Provide utilities methods for database purposes.
+/// </summary>
 public class DatabaseUtils {
     const string DirectoryName = ".Connection";
     const string QualityPrefix = "quality";
@@ -221,7 +224,7 @@ public class DatabaseUtils {
                     entityEntry.State = EntityState.Unchanged;
                 }
             } else {
-                /// --> At this point we already know it's a collection relation.
+                // --> At this point we already know it's a collection relation.
                 IEnumerable<IEntity> relCollection = (IEnumerable<IEntity>)relationValue;
                 if (!relCollection.Any())
                     continue;

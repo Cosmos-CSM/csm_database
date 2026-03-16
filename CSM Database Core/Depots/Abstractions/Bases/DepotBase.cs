@@ -36,7 +36,7 @@ public abstract class DepotBase<TDatabase, TEntity>
     protected readonly TDatabase _db;
 
     /// <summary>
-    ///     DBSet handler into <see cref="_db"/> to handle fastlike transactions related to the <see cref="TEntity"/> 
+    ///     DBSet handler into <see cref="_db"/> to handle fastlike transactions related to the <typeparamref name="TEntity"/>.
     /// </summary>
     protected readonly DbSet<TEntity> _dbSet;
 
@@ -44,7 +44,10 @@ public abstract class DepotBase<TDatabase, TEntity>
     ///     Generates a new instance of a <see cref="DepotBase{TMigrationDatabases, TMigrationSet}"/> base.
     /// </summary>
     /// <param name="Database">
-    ///     The <typeparamref name="TDatabase"/> that stores and handles the transactions for this <see cref="TEntity"/> concept.
+    ///     The <typeparamref name="TDatabase"/> that stores and handles the transactions for this <typeparamref name="TEntity"/> concept.
+    /// </param>
+    /// <param name="Disposer">
+    ///     Data disposition manager (commonly and recommended use for testing data disposition).
     /// </param>
     public DepotBase(TDatabase Database, IDisposer<IEntity>? Disposer) {
         _db = Database;
@@ -80,6 +83,7 @@ public abstract class DepotBase<TDatabase, TEntity>
 
     #region View 
 
+    /// <inheritdoc/>
     public async Task<ViewOutput<TEntity>> View(QueryInput<TEntity, ViewInput<TEntity>> input) {
         ViewInput<TEntity> parameters = input.Parameters;
 
@@ -108,6 +112,7 @@ public abstract class DepotBase<TDatabase, TEntity>
 
     #region Create
 
+    /// <inheritdoc/>
     public virtual async Task<TEntity> Create(TEntity entity) {
         TEntity instEntity = (TEntity)entity;
 
@@ -123,6 +128,7 @@ public abstract class DepotBase<TDatabase, TEntity>
         return instEntity;
     }
 
+    /// <inheritdoc/>
     public virtual async Task<BatchOperationOutput<TEntity>> Create(ICollection<TEntity> entities, bool sync = false) {
         IEnumerable<TEntity> instEntities = entities.Cast<TEntity>();
 
@@ -150,6 +156,7 @@ public abstract class DepotBase<TDatabase, TEntity>
 
     #region Read
 
+    /// <inheritdoc/>
     public async Task<TEntity> Read(long id) {
         TEntity? entity = await _dbSet.Where(
                 e => e.Id == id
@@ -161,6 +168,7 @@ public abstract class DepotBase<TDatabase, TEntity>
         return entity;
     }
 
+    /// <inheritdoc/>
     public async Task<BatchOperationOutput<TEntity>> Read(long[] ids) {
 
         List<TEntity> readings = [];
@@ -187,6 +195,7 @@ public abstract class DepotBase<TDatabase, TEntity>
         return new BatchOperationOutput<TEntity>([.. readings], [.. errors]);
     }
 
+    /// <inheritdoc/>
     public async Task<BatchOperationOutput<TEntity>> Read(QueryInput<TEntity, FilterQueryInput<TEntity>> input) {
         FilterQueryInput<TEntity> parameters = input.Parameters;
 
@@ -236,6 +245,7 @@ public abstract class DepotBase<TDatabase, TEntity>
 
     #region Update 
 
+    /// <inheritdoc/>
     public async Task<UpdateOutput<TEntity>> Update(QueryInput<TEntity, UpdateInput<TEntity>> input) {
         UpdateInput<TEntity> parameters = input.Parameters;
 
@@ -247,7 +257,7 @@ public abstract class DepotBase<TDatabase, TEntity>
 
         TEntity entity = (TEntity)parameters.Entity;
 
-        /// --> When the entity is not saved yet.
+        // --> When the entity is not saved yet.
         if (entity.Id == 0) {
             if (!parameters.Create) {
                 throw new DepotError<TEntity>(DepotErrorEvents.CREATE_DISABLED);
@@ -298,6 +308,7 @@ public abstract class DepotBase<TDatabase, TEntity>
 
     #region Delete
 
+    /// <inheritdoc/>
     public async Task<TEntity> Delete(long id) {
         TEntity entity = await _dbSet
             .AsNoTracking()
@@ -311,6 +322,7 @@ public abstract class DepotBase<TDatabase, TEntity>
         return entity;
     }
 
+    /// <inheritdoc/>
     public async Task<BatchOperationOutput<TEntity>> Delete(long[] ids) {
         List<TEntity> successes = [];
         List<EntityError<TEntity>> failures = [];
@@ -335,6 +347,7 @@ public abstract class DepotBase<TDatabase, TEntity>
         return new BatchOperationOutput<TEntity>([.. successes], [.. failures]);
     }
 
+    /// <inheritdoc/>
     public async Task<BatchOperationOutput<TEntity>> Delete(QueryInput<TEntity, FilterQueryInput<TEntity>> input) {
         FilterQueryInput<TEntity> parameters = input.Parameters;
 
@@ -367,12 +380,14 @@ public abstract class DepotBase<TDatabase, TEntity>
         return new BatchOperationOutput<TEntity>([.. successes], [.. failures]);
     }
 
+    /// <inheritdoc/>
     public async Task<TEntity> Delete(TEntity entity) {
         _dbSet.Remove((TEntity)entity);
         await _db.SaveChangesAsync();
         return entity;
     }
 
+    /// <inheritdoc/>
     public async Task<BatchOperationOutput<TEntity>> Delete(TEntity[] entities) {
         List<TEntity> successes = [];
         List<EntityError<TEntity>> failures = [];

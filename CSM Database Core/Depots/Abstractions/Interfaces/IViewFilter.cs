@@ -55,6 +55,8 @@ public static class ISetArrayExtension {
 /// 
 /// </summary>
 public class ISetViewFilterConverterFactory : JsonConverterFactory {
+
+    /// <inheritdoc/>
     public override bool CanConvert(Type typeToConvert) {
         if (!typeToConvert.IsGenericType) {
             return false;
@@ -64,6 +66,7 @@ public class ISetViewFilterConverterFactory : JsonConverterFactory {
         return genericType == typeof(IViewFilter<>);
     }
 
+    /// <inheritdoc/>
     public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options) {
         Type itemType = typeToConvert.GetGenericArguments()[0];
         Type converterType = typeof(ISetViewFilterConverter<>).MakeGenericType(itemType);

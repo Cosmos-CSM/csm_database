@@ -7,7 +7,9 @@ namespace CSM_Database_Core.Validation.Abstractions.Bases;
 public abstract class ValidatorBase
     : Attribute, IValidator {
 
+    /// <inheritdoc/>
     public abstract bool ValidateType(Type Type);
 
+    /// <inheritdoc/>
     public abstract bool Validate(object? value);
 }

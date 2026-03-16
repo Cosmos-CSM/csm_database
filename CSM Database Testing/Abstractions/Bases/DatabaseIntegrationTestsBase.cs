@@ -17,7 +17,7 @@ namespace CSM_Database_Testing.Abstractions.Bases;
 /// <typeparam name="TDatabase">
 ///     Database context type to be tested.
 /// </typeparam>
-public abstract class TestingDatabaseBase<TDatabase>
+public abstract class DatabaseIntegrationTestsBase<TDatabase>
     : ITestingDatabase
     where TDatabase : DatabaseBase<TDatabase>, new() {
 
@@ -29,7 +29,7 @@ public abstract class TestingDatabaseBase<TDatabase>
     /// <summary>
     ///     Creates a new instance.
     /// </summary>
-    public TestingDatabaseBase() {
+    public DatabaseIntegrationTestsBase() {
 
         _database = (TDatabase)Activator.CreateInstance(
                 typeof(TDatabase),
@@ -39,6 +39,9 @@ public abstract class TestingDatabaseBase<TDatabase>
             )!;
     }
 
+    /// <summary>
+    ///     Tests that <typeparamref name="TDatabase"/> is correctly migrated at the target server.
+    /// </summary>
     [Fact]
     public void Migration() {
         IEnumerable<string> pendingMigrations = _database.Database.GetPendingMigrations();
@@ -46,11 +49,17 @@ public abstract class TestingDatabaseBase<TDatabase>
         Assert.True(pendingMigrations.Empty(), $"Database instance isn't up-to-date with current database migrations. ({pendingMigrations.Count()} pendent)");
     }
 
+    /// <summary>
+    ///     Tests that <typeparamref name="TDatabase"/> has communication with the server.
+    /// </summary>
     [Fact]
     public void Communication() {
         Assert.True(_database.Database.CanConnect(), $"{GetType()} cannot connect, check your connection credentials.");
     }
 
+    /// <summary>
+    ///     Testst that <typeparamref name="TDatabase"/> is correctly configured
+    /// </summary>
     [Fact]
     public void Evaluate() {
         _database.Validate();

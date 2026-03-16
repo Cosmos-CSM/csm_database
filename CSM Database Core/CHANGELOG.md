@@ -1,5 +1,20 @@
 # CSM Database CHANGELOG
 
+## [4.3.1] - 16.03-2026
+
+### Changes
+
+- Exposed package documentation.
+- Added solution documentation.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.1.0            | 2.1.0           |
+| Microsoft.EntityFrameworkCore           | 10.0.3           | 10.0.5          |
+| Microsoft.EntityFrameworkCore.SqlServer | 10.0.3           | 10.0.5          |
+
 ## [4.3.0] - 16.02-2026
 
 ### Fixed

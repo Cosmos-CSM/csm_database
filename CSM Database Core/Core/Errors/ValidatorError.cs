@@ -11,6 +11,9 @@ namespace CSM_Database_Core.Core.Errors;
 ///     Represents <see cref="ValidatorError"/> events.
 /// </summary>
 public enum ValidatorErrorEvents {
+    /// <summary>
+    ///     Event trigger when the <see cref="IEntity"/> is invalid.
+    /// </summary>
     INVALID,
 }
 
@@ -43,6 +46,9 @@ public class ValidatorError
     /// </param>
     /// <param name="property">
     ///     Entity property that has failed validation.
+    /// </param>
+    /// <param name="entity">
+    ///     Entity that triggered the error.
     /// </param>
     /// <param name="message">
     ///     Validation message.

@@ -4,13 +4,10 @@ using CSM_Database_Core.Entities.Abstractions.Interfaces;
 namespace CSM_Database_Core.Depots.Abstractions.Interfaces;
 
 /// <summary>
-///     Represents updating logic for a <see cref="IDepot{TEntity, TEntity}"/>.
+///     Represents updating logic for a <see cref="IDepot{TEntity}"/>.
 /// </summary>
 /// <typeparam name="TEntity">
 ///     Type of the <see cref="IEntity"/> handled.
-/// </typeparam>
-/// <typeparam name="TEntity">
-///     Type of the <see cref="IEntity"/> interface handled.
 /// </typeparam>
 public interface IDepotUpdate<TEntity>
     where TEntity : class, IEntity {

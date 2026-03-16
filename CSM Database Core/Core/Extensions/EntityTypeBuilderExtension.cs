@@ -8,83 +8,164 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace CSM_Database_Core.Core.Extensions;
 
 /// <summary>
-/// 
+///     Provide extension methods for <see cref="EntityTypeBuilder"/> class type. 
 /// </summary>
 public static class EntityTypeBuilderExtension {
 
     /// <summary>
-    /// 
+    ///     Creates a relation between two entities into the data storage migration.
     /// </summary>
-    /// <param name="Builder"></param>
-    /// <param name="Relation"></param>
-    /// <param name="SourceReference"></param>
-    /// <param name="Required"></param>
-    /// <param name="Auto"></param>
-    /// <param name="Deletion"></param>
-    public static void Link(this EntityTypeBuilder Builder, (Type Source, Type Target) Relation, string SourceReference, string? TargetReference = null, bool Required = false, bool Auto = false, bool Index = false, DeleteBehavior Deletion = DeleteBehavior.Restrict) {
-        Type entityIType = typeof(IEntity);
-        Type source = Relation.Source;
-        Type target = Relation.Target;
+    /// <param name="entityTypeBuilder">
+    ///     Instance of <see cref="DbContext"/> entity type builder, from native Entity Framework configuration.
+    /// </param>
+    /// <param name="sourceRelationType">
+    ///     Type of the source entity for the relation.
+    /// </param>
+    /// <param name="sourceRef">
+    ///     Property reference name from <paramref name="sourceRelationType"/> that will store the <paramref name="targetRelationType"/> object.
+    /// </param>
+    /// <param name="targetRelationType">
+    ///     Type of the target entity for the relation.
+    /// </param>
+    /// <param name="targetRef">
+    ///     Property reference name from <paramref name="targetRelationType"/> that will store the <paramref name="sourceRelationType"/> object. If null, framework will try to calculate the ref
+    ///     automatically.
+    /// </param>
+    /// <param name="isRequired">
+    ///     Whether this relation is required at database level.
+    /// </param>
+    /// <param name="isAutoLoaded">
+    ///     Whether this relation will be automatically loaded on each reading event.
+    /// </param>
+    /// <param name="isIndex">
+    ///     Whether this relation must be unique and work as index. This is calculated using both primary keys from each entity.
+    /// </param>
+    /// <param name="deleteBehavior">
+    ///     Behavior when one of the relation is removed.
+    /// </param>
+    public static void Link(
+            this EntityTypeBuilder entityTypeBuilder,
+            Type sourceRelationType,
+            string sourceRef,
+            Type targetRelationType,
+            string? targetRef = null,
+            bool isRequired = false,
+            bool isAutoLoaded = false,
+            bool isIndex = false,
+            DeleteBehavior deleteBehavior = DeleteBehavior.Restrict
+        ) {
+        Type entityInterfaceType = typeof(IEntity);
 
-        if (!(source.IsAssignableTo(entityIType) && target.IsAssignableTo(entityIType))) {
-            throw new Exception($"[SourceT ({source.Name})] or [Target ({target.Name})] Relation configuration is not an [IEntity]");
-        }
-        PropertyInfo sourceNavigation = source.GetProperty(SourceReference)
-            ?? throw new Exception($"[Source {source.Name}] doesn't contain navigation reference ({SourceReference})");
-        if (sourceNavigation.PropertyType.IsGenericType && sourceNavigation.PropertyType.GetGenericTypeDefinition() == typeof(ICollection<>)) {
-            throw new Exception($"This method only supports one to on/many relationship for many-to-many use ({1})");
+        Type source = sourceRelationType;
+        Type target = targetRelationType;
+
+        bool isSourceEntity = source.IsAssignableTo(entityInterfaceType);
+        bool isTargetEntity = target.IsAssignableTo(entityInterfaceType);
+
+        if (!(isSourceEntity && isTargetEntity)) {
+            throw new Exception($"Relation [Source ({source.Name})] or [Target ({target.Name})] is not a CSM [IEntity]");
         }
 
-        string targetReference = TargetReference ?? $"{source.Name}";
+        PropertyInfo sourceNavigation = source.GetProperty(sourceRef)
+            ?? throw new Exception($"[Source {source.Name}] doesn't contain a navigation reference ({sourceRef})");
+
+        Type sourcePropertyType = sourceNavigation.PropertyType;
+        if (sourcePropertyType.IsGenericType && sourcePropertyType.GetGenericTypeDefinition() == typeof(ICollection<>)) {
+            throw new Exception($"This method only supports one to one/many relationship for many-to-many use ( #WIP# )");
+        }
+
+        string targetReference = targetRef ?? $"{source.Name}";
         PropertyInfo? targetNavigation = target.GetProperty(targetReference);
-        if (TargetReference == null && targetNavigation == null) {
+        if (targetRef == null && targetNavigation == null) {
             targetReference = $"{source.Name}s";
             targetNavigation = target.GetProperty(targetReference);
         }
-        string shadowProperty = $"{SourceReference}Shadow";
+        string shadowProperty = $"{sourceRef}Shadow";
 
-        Type propType = Required ? typeof(long) : typeof(long?);
-        Builder.Property(propType, shadowProperty).HasColumnName(SourceReference).HasColumnType("bigint").IsRequired(Required);
+        Type propType = isRequired
+            ? typeof(long)
+            : typeof(long?);
+        entityTypeBuilder
+            .Property(propType, shadowProperty)
+            .HasColumnName(sourceRef)
+            .HasColumnType("bigint")
+            .IsRequired(isRequired);
 
-        ReferenceNavigationBuilder relationBuilder = Builder.HasOne(target, SourceReference);
-        if (targetNavigation != null && targetNavigation.PropertyType.IsGenericType && targetNavigation.PropertyType.GetGenericTypeDefinition() == typeof(ICollection<>)) {
-            relationBuilder.WithMany(targetReference).HasForeignKey(shadowProperty).OnDelete(Deletion).IsRequired(Required);
+        ReferenceNavigationBuilder relationBuilder = entityTypeBuilder.HasOne(target, sourceRef);
+        Type? targetNavPropType = targetNavigation?.PropertyType;
+        if (targetNavPropType != null && targetNavPropType.IsGenericType && targetNavPropType.GetGenericTypeDefinition() == typeof(ICollection<>)) {
+            relationBuilder
+                .WithMany(targetReference)
+                .HasForeignKey(shadowProperty)
+                .OnDelete(deleteBehavior)
+                .IsRequired(isRequired);
         } else {
-
-            relationBuilder.WithOne(targetNavigation is null ? null : targetReference).HasForeignKey(source, shadowProperty).OnDelete(Deletion).IsRequired(Required);
+            relationBuilder
+                .WithOne(targetNavigation is null ? null : targetReference)
+                .HasForeignKey(source, shadowProperty)
+                .OnDelete(deleteBehavior)
+                .IsRequired(isRequired);
         }
 
-        if (Auto) {
-            Builder.Navigation(SourceReference).AutoInclude();
+        if (isAutoLoaded) {
+            entityTypeBuilder
+                .Navigation(sourceRef)
+                .AutoInclude();
         }
 
-        if (Index && Required) {
-            Builder.HasIndex(shadowProperty).IsUnique();
+        if (isIndex && isRequired) {
+            entityTypeBuilder
+                .HasIndex(shadowProperty)
+                .IsUnique();
         }
     }
+
+
     /// <summary>
-    ///     
+    ///     Creates a relation between two entities into the data storage migration.
     /// </summary>
-    /// <typeparam name="SourceT"></typeparam>
-    /// <typeparam name="TargetT"></typeparam>
-    /// <param name="etBuilder"></param>
-    /// <param name="SourceReference"></param>
-    /// <param name="Required"></param>
-    /// <param name="Auto"></param>
-    /// <param name="Deletion"></param>
-    public static void Link<SourceT, TargetT>(this EntityTypeBuilder etBuilder, string SourceReference, string? TargetReference = null, bool Required = false, bool Auto = false, bool Index = false, DeleteBehavior Deletion = DeleteBehavior.Restrict)
-        where SourceT : class, IEntity
-        where TargetT : class, IEntity {
+    /// <typeparam name="TSource">
+    ///     Type of the relation source entity.
+    /// </typeparam>
+    /// <typeparam name="TTarget">
+    ///     Type of the relation target entity.
+    /// </typeparam>
+    /// <param name="entityTypeBuilder">
+    ///     Instance of <see cref="DbContext"/> entity type builder, from native Entity Framework configuration.
+    /// </param>
+    /// <param name="sourceRef">
+    ///     Property reference name from <typeparamref name="TSource"/> that will store the <typeparamref name="TTarget"/> object.
+    /// </param>
+    /// <param name="targetRef">
+    ///     Property reference name from <typeparamref name="TTarget"/> that will store the <typeparamref name="TSource"/> object. If null, framework will try to calculate the ref
+    ///     automatically.
+    /// </param>
+    /// <param name="isRequired">
+    ///     Whether this relation is required at database level.
+    /// </param>
+    /// <param name="isAutoLoaded">
+    ///     Whether this relation will be automatically loaded on each reading event.
+    /// </param>
+    /// <param name="isIndex">
+    ///     Whether this relation must be unique and work as index. This is calculated using both primary keys from each entity.
+    /// </param>
+    /// <param name="deleteBehavior">
+    ///     Behavior when one of the relation is removed.
+    /// </param>
+    public static void Link<TSource, TTarget>(this EntityTypeBuilder entityTypeBuilder, string sourceRef, string? targetRef = null, bool isRequired = false, bool isAutoLoaded = false, bool isIndex = false, DeleteBehavior deleteBehavior = DeleteBehavior.Restrict)
+        where TSource : class, IEntity
+        where TTarget : class, IEntity {
 
         Link(
-                etBuilder,
-                (typeof(SourceT), typeof(TargetT)),
-                SourceReference: SourceReference,
-                TargetReference: TargetReference,
-                Required: Required,
-                Auto: Auto,
-                Index: Index,
-                Deletion: Deletion
+                entityTypeBuilder,
+                typeof(TSource),
+                sourceRef,
+                typeof(TTarget),
+                targetRef: targetRef,
+                isRequired: isRequired,
+                isAutoLoaded: isAutoLoaded,
+                isIndex: isIndex,
+                deleteBehavior: deleteBehavior
             );
     }
 }

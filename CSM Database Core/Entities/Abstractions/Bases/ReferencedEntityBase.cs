@@ -9,5 +9,6 @@ namespace CSM_Database_Core.Entities.Abstractions.Bases;
 public abstract class ReferencedEntityBase
     : EntityBase, IReferencedEntity {
 
+    /// <inheritdoc/>
     public string Reference { get; set; } = string.Empty;
 }

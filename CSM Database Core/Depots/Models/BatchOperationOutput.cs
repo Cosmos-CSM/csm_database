@@ -47,9 +47,18 @@ public record BatchOperationOutput<TEntity>
     /// </summary>
     public int SuccessesCount { get; private set; }
 
-    public BatchOperationOutput(TEntity[] Successes, EntityError<TEntity>[] Failures) {
-        this.Successes = Successes;
-        this.Failures = Failures;
+    /// <summary>
+    ///     Creates a new instance.
+    /// </summary>
+    /// <param name="successes">
+    ///     Entities succedeed.
+    /// </param>
+    /// <param name="errors">
+    ///     Errors.
+    /// </param>
+    public BatchOperationOutput(TEntity[] successes, EntityError<TEntity>[] errors) {
+        this.Successes = successes;
+        this.Failures = errors;
 
         SuccessesCount = this.Successes.Length;
         FailuresCount = this.Failures.Length;

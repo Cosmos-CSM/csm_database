@@ -1,5 +1,19 @@
 # CSM Database Testing CHANGELOG
 
+## [5.0.1] - 16.03-2026
+
+### Changed
+
+- Exposed package documentation.
+- Added solution documentation.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.1.0            | 2.1.0           |
+| xunit.v3								  | 3.2.2            | 3.2.2           |
+
 ## [5.0.0] - 15.02-2026
 
 ### Changed

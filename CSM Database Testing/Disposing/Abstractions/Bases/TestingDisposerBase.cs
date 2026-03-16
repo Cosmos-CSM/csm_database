@@ -52,6 +52,7 @@ public abstract class TestingDisposerBase
         }
     }
 
+    /// <inheritdoc/>
     public void Push(IEntity entity) {
         if (_dbFactories.ContainsKey(entity.Database)) {
             _queue.AddOrUpdate(
@@ -65,12 +66,14 @@ public abstract class TestingDisposerBase
         }
     }
 
+    /// <inheritdoc/>
     public void Push(IEntity[] entities) {
         foreach (IEntity Record in entities) {
             Push(Record);
         }
     }
 
+    /// <inheritdoc/>
     public void Dispose() {
         foreach (KeyValuePair<Type, IEntity[]> Database in _queue) {
             Type dbType = Database.Key;

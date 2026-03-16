@@ -15,7 +15,7 @@ public interface IEntity
     : IConverterVariant {
 
     /// <summary>
-    ///     Type of the <see cref="IDatabase"/> implementation that stores this <see cref="IEntity"/> implementation.
+    ///     Type of the <see cref="CSM_Database_Core.Abstractions.Interfaces.IDatabase"/> implementation that stores this <see cref="IEntity"/> implementation.
     /// </summary>
     [JsonIgnore, NotMapped]
     Type Database { get; init; }

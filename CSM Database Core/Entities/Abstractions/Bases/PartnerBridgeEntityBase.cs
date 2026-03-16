@@ -18,12 +18,15 @@ public abstract class PartnerBridgeEntityBase<TInternalScope, TExternalScope>
     where TInternalScope : IPartnerScopeEntity
     where TExternalScope : IPartnerScopeEntity {
 
+    /// <inheritdoc/>
     public TInternalScope? Internal { get; set; }
 
+    /// <inheritdoc/>
     public TExternalScope? External { get; set; }
 
+    /// <inheritdoc/>
     protected internal override void DesignEntity(EntityTypeBuilder etBuilder) {
-        string referenceName = nameof(IPartnerScopeEntity<IPartnerBridgeEntity>.Bridge);
+        string referenceName = nameof(IPartnerScopeEntity<>.Bridge);
 
         etBuilder
             .HasOne(typeof(TExternalScope), nameof(External))
@@ -48,6 +51,6 @@ public abstract class PartnerBridgeEntityBase<TInternalScope, TExternalScope>
         DesignCommonEntity(etBuilder);
     }
 
+    /// <inheritdoc/>
     protected abstract void DesignCommonEntity(EntityTypeBuilder etBuilder);
-
 }
