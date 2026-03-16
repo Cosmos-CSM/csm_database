@@ -294,7 +294,7 @@ public abstract class DepotBase<TDatabase, TEntity>
         }
 
         entity = DatabaseUtils.SanitizeEntity(_db, entity);
-        _dbSet.Update(entity);
+        _dbSet.Attach(entity);
         await _db.SaveChangesAsync();
         _disposer?.Push(entity);
 
