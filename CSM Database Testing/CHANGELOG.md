@@ -1,5 +1,19 @@
 # CSM Database Testing CHANGELOG
 
+## [5.1.0] - 16.03-2026
+
+### Changes
+
+- Now testing base methods names have a better description of the test itself.
+- Now [Update_Success] tests is required to be implemented since there're special checks.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.1.0            | 2.1.0           |
+| xunit.v3								  | 3.2.2            | 3.2.2           |
+
 ## [5.0.1] - 16.03-2026
 
 ### Changed
