@@ -82,6 +82,38 @@ public class TestingStoreManager
     }
 
     /// <summary>
+    ///     Stores the given <paramref name="entities"/>.
+    /// </summary>
+    /// <typeparam name="TEntity2">
+    ///     Type of the <see cref="IEntity"/> to store.
+    /// </typeparam>
+    /// <param name="entities">
+    ///     Entities to store.
+    /// </param>
+    /// <returns>
+    ///     Stored <paramref name="entities"/>.
+    /// </returns>
+    public async Task<TEntity2[]> Store<TEntity2>(TEntity2[] entities)
+        where TEntity2 : class, IEntity {
+
+        DbContext db = GetDatabase(entities[0].Database);
+        List<TEntity2> refs = [];
+
+        foreach (TEntity2 entity in entities) {
+            refs.Add(
+                    DatabaseUtils.SanitizeEntity(db, entity)
+                );
+        }
+
+        await db.Set<TEntity2>().AddRangeAsync(refs);
+        await db.SaveChangesAsync();
+
+        _disposer.Push([..refs]);
+
+        return [..refs];
+    }
+
+    /// <summary>
     ///     Stores the given <paramref name="entityFactory"/> built <typeparamref name="TEntity2"/>.
     /// </summary>
     /// <typeparam name="TEntity2">
