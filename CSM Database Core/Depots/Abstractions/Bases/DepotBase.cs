@@ -298,6 +298,7 @@ public abstract class DepotBase<TDatabase, TEntity>
         await _db.SaveChangesAsync();
         _disposer?.Push(entity);
 
+        entity = await Read(entity.Id);
         return new UpdateOutput<TEntity> {
             Original = original,
             Updated = entity,
