@@ -314,11 +314,11 @@ public class DatabaseUtils {
 
 
                 Type dependantType = dependantEntity.GetType();
-                PropertyInfo dependencyProp = dependantType
-                    .GetProperties()
+                PropertyInfo[] dependantProps = dependantType.GetProperties();
+                PropertyInfo dependencyProp = dependantProps
                     .FirstOrDefault(
                             dependantTypeProp => {
-                                DependencyAttribute? dependencyAttr = dependantTypeProp.GetCustomAttribute<DependencyAttribute>();
+                                EntityDependencyAttribute? dependencyAttr = dependantTypeProp.GetCustomAttribute<EntityDependencyAttribute>();
                                 if (dependencyAttr == null)
                                     return false;
 
