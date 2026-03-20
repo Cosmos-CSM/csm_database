@@ -141,6 +141,31 @@ public class DatabaseUtils {
     }
 
     /// <summary>
+    ///     Gets the <see cref="DbSet{TEntity}"/> query from the given <paramref name="database"/> based on the given <paramref name="entityType"/>.
+    /// </summary>
+    /// <param name="database">
+    ///     Database to locate <see cref="DbSet{TEntity}"/>
+    /// </param>
+    /// <param name="entityType">
+    ///     Entity type to get the <see cref="DbSet{TEntity}"/>
+    /// </param>
+    /// <returns>
+    ///     <see cref="DbSet{TEntity}"/> queryable object.
+    /// </returns>
+    public static IQueryable<IEntity> GetDbSet(DbContext database, Type entityType) {
+        object objectDbSet = typeof(DbContext)
+            .GetMethods()
+            .FirstOrDefault(
+                m => m.Name == nameof(DbContext.Set) && m.IsGenericMethod && m.GetGenericArguments().Length == 1
+            )?
+            .MakeGenericMethod(entityType)
+            .Invoke(database, null)
+            ?? throw new($"DbContext({database.GetType().Name}) doesn´t have the neccesary DbSet({entityType.Name}) method", null);
+
+        return (IQueryable<IEntity>)objectDbSet;
+    }
+
+    /// <summary>
     ///     Sanitizes the entity relations to ensure that the relations are correctly tracked from the database and avoid the creation of relation entities wrongly given through the main entity.
     /// </summary>
     /// <typeparam name="TEntity">
@@ -162,35 +187,33 @@ public class DatabaseUtils {
     ///     Thrown when the relation entity couldn't be found in the database.
     /// </exception>
     public static TEntity SanitizeEntity<TEntity>(DbContext database, TEntity entity) {
-
-        IQueryable<IEntity> GetDbSet(Type entityType) {
-            object objectDbSet = typeof(DbContext)
-                .GetMethods()
-                .Where(
-                    m => m.Name == nameof(DbContext.Set) && m.IsGenericMethod && m.GetGenericArguments().Length == 1
-                )
-                .FirstOrDefault()?
-                .MakeGenericMethod(entityType)
-                .Invoke(database, null)
-                ?? throw new($"DbContext({database.GetType().Name}) doesn´t have the neccesary DbSet({entityType.Name}) method", null);
-
-            return (IQueryable<IEntity>)objectDbSet;
-        }
-
         if (entity == null) {
             return entity;
         }
 
-        IEnumerable<PropertyInfo> relationProperties = entity
-            .GetType()
-            .GetProperties()
-            .Where(
-                (pi) => pi.GetCustomAttribute<EntityRelationAttribute>() != null
-            );
+        Type entityType = entity.GetType();
+        PropertyInfo[] entityTypeProperties = entityType.GetProperties();
 
-        foreach (PropertyInfo relationProperty in relationProperties) {
-            Type relationType = relationProperty.PropertyType;
-            object? relationValue = relationProperty.GetValue(entity);
+        List<PropertyInfo> dependenciesProps = [];
+        List<PropertyInfo> dependantsProps = [];
+
+        foreach (PropertyInfo entityTypeProperty in entityTypeProperties) {
+            EntityDependencyAttribute? isDependency = entityTypeProperty.GetCustomAttribute<EntityDependencyAttribute>();
+
+            if (isDependency != null) {
+                dependenciesProps.Add(entityTypeProperty);
+                continue;
+            }
+
+            EntityDependantAttribute? isDependant = entityTypeProperty.GetCustomAttribute<EntityDependantAttribute>();
+            if (isDependant != null) {
+                dependantsProps.Add(entityTypeProperty);
+            }
+        }
+
+        foreach (PropertyInfo dependencyProp in dependenciesProps) {
+            Type dependencyPropType = dependencyProp.PropertyType;
+            object? relationValue = dependencyProp.GetValue(entity);
 
             if (relationValue is null) {
                 continue;
@@ -210,7 +233,7 @@ public class DatabaseUtils {
                     throw new SystemError($"Dependencies aren't allowed to be created on main Entity creation", null);
                 }
 
-                IQueryable<IEntity> dbSet = GetDbSet(relEntity.GetType());
+                IQueryable<IEntity> dbSet = GetDbSet(database, relEntity.GetType());
 
                 IEntity dbRelEntity = dbSet.Where(
                         entity => entity.Id == relEntity.Id
@@ -218,7 +241,7 @@ public class DatabaseUtils {
                     .FirstOrDefault()
                     ?? throw new SystemError($"Couldn't find relation entity ({relEntity.GetType().Name})[{relEntity.Id}]", null);
 
-                relationProperty.SetValue(entity, dbRelEntity);
+                dependencyProp.SetValue(entity, dbRelEntity);
                 EntityEntry entityEntry = database.Entry(dbRelEntity);
                 if (entityEntry.State == EntityState.Detached) {
                     entityEntry.State = EntityState.Unchanged;
@@ -231,7 +254,7 @@ public class DatabaseUtils {
 
                 IEnumerable<object> dbRelCollection = [];
                 Type relEntityType = relCollection.First().GetType();
-                IQueryable<IEntity> dbSet = GetDbSet(relEntityType);
+                IQueryable<IEntity> dbSet = GetDbSet(database, relEntityType);
 
                 foreach (IEntity relEntity in relCollection) {
 
@@ -270,9 +293,14 @@ public class DatabaseUtils {
                     )
                     ?? throw new SystemError("Unable to convert entity collection", null);
 
-                relationProperty.SetValue(entity, castedCollection);
+                dependencyProp.SetValue(entity, castedCollection);
             }
         }
+
+        foreach (PropertyInfo dependantProp in dependantsProps) {
+            // --> TODO: Comming soon <-- //
+        }
+
         return entity;
     }
 

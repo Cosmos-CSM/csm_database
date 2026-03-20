@@ -10,6 +10,7 @@ namespace CSM_Database_Core.Core.Attributes;
 ///     functionalities for data handling.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+[Obsolete("This attribute is no longer supporter and will be removed at the next major (5.0.0), please use [EntityDependencyAttribute], [EntityDependantAttribute]", true)]
 public class EntityRelationAttribute
     : Attribute {
 }
