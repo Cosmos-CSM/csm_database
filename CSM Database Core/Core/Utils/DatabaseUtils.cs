@@ -341,17 +341,17 @@ public class DatabaseUtils {
                     ?? throw new SystemError($"Couldn't find dependant ({dependantEntity.Id}) [{dependantType.Name}] in database", null);
 
 
-                object? dependencyValue = dependantProp.GetValue(trackedDependant);
+                object? dependencyValue = dependencyProp.GetValue(trackedDependant);
 
 
                 if (dependencyValue == null) {
-                    dependantProp.SetValue(trackedDependant, entity);
+                    dependencyProp.SetValue(trackedDependant, entity);
                     continue;
                 }
 
                 IEntity dependencyEntity = (IEntity)dependencyValue;
                 if (dependencyEntity.Id != entity.Id) {
-                    dependantProp.SetValue(trackedDependant, entity);
+                    dependencyProp.SetValue(trackedDependant, entity);
                 }
             }
         }
