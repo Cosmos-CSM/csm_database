@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 using CSM_Database_Core.Core.Attributes;
@@ -186,11 +187,8 @@ public class DatabaseUtils {
     /// <exception cref="Exception">
     ///     Thrown when the relation entity couldn't be found in the database.
     /// </exception>
-    public static TEntity SanitizeEntity<TEntity>(DbContext database, TEntity entity) {
-        if (entity == null) {
-            return entity;
-        }
-
+    public static TEntity SanitizeEntity<TEntity>(DbContext database, TEntity entity)
+        where TEntity : IEntity {
         Type entityType = entity.GetType();
         PropertyInfo[] entityTypeProperties = entityType.GetProperties();
 
@@ -299,6 +297,64 @@ public class DatabaseUtils {
 
         foreach (PropertyInfo dependantProp in dependantsProps) {
             // --> TODO: Comming soon <-- //
+            Type dependantPropType = dependantProp.PropertyType;
+            object? dependantValue = dependantProp.GetValue(entity);
+
+            if (dependantValue is null) {
+                continue;
+            }
+
+            if (dependantValue is not IEnumerable<IEntity> dependantEntities) {
+                throw new SystemError($"Entity dependant integrity error, a dependant always must be a collection", null);
+            }
+
+            // --> Looking into dependants to sanitize its dependency.
+            foreach (IEntity dependantEntity in dependantEntities) {
+                if (dependantEntity.Id == 0)
+                    throw new SystemError($"Dependants aren't allowed to be created on main Entity creation", null);
+
+
+                Type dependantType = dependantEntity.GetType();
+                PropertyInfo dependencyProp = dependantType
+                    .GetProperties()
+                    .FirstOrDefault(
+                            dependantTypeProps => {
+                                DependencyAttribute? dependencyAttr = dependantType.GetCustomAttribute<DependencyAttribute>();
+                                if (dependencyAttr == null)
+                                    return false;
+
+
+                                return dependantTypeProps.PropertyType.Namespace == entityType.Namespace;
+                            }
+                        )
+                    ?? throw new SystemError($"Couldn't find dependency property ({entityType.Name}) in dependant entity ({dependantType.Name})", null);
+
+
+                if (!dependantPropType.IsAssignableTo(typeof(IEntity)))
+                    throw new SystemError($"Dependency ({dependencyProp.Name}) found at Dependant ({dependantProp.Name}) but it isn't a IEntity", null);
+
+                IQueryable<IEntity> dbSet = GetDbSet(database, dependantType.GetType());
+
+                IEntity trackedDependant = dbSet.Where(
+                        entity => entity.Id == dependantEntity.Id
+                    )
+                    .FirstOrDefault()
+                    ?? throw new SystemError($"Couldn't find dependant ({dependantEntity.Id}) [{dependantType.Name}] in database", null);
+
+
+                object? dependencyValue = dependantProp.GetValue(trackedDependant);
+
+
+                if (dependencyValue == null) {
+                    dependantProp.SetValue(trackedDependant, entity);
+                    continue;
+                }
+
+                IEntity dependencyEntity = (IEntity)dependencyValue;
+                if (dependencyEntity.Id != entity.Id) {
+                    dependantProp.SetValue(trackedDependant, entity);
+                }
+            }
         }
 
         return entity;
