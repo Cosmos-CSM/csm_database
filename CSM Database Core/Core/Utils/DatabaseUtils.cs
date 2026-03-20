@@ -323,7 +323,7 @@ public class DatabaseUtils {
                                     return false;
 
 
-                                return dependantTypeProp.PropertyType.Namespace == entityType.Namespace;
+                                return dependantTypeProp.PropertyType == entityType;
                             }
                         )
                     ?? throw new SystemError($"Couldn't find dependency property ({entityType.Name}) in dependant entity ({dependantType.Name})", null);
