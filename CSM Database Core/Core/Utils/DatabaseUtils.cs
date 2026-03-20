@@ -332,7 +332,7 @@ public class DatabaseUtils {
                 if (!dependencyProp.PropertyType.IsAssignableTo(typeof(IEntity)))
                     throw new SystemError($"Dependency ({dependencyProp.Name}) found at Dependant ({dependantProp.Name}) but it isn't a IEntity", null);
 
-                IQueryable<IEntity> dbSet = GetDbSet(database, dependantType.GetType());
+                IQueryable<IEntity> dbSet = GetDbSet(database, dependantType);
 
                 IEntity trackedDependant = dbSet.Where(
                         entity => entity.Id == dependantEntity.Id
