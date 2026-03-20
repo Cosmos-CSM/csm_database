@@ -296,7 +296,6 @@ public class DatabaseUtils {
         }
 
         foreach (PropertyInfo dependantProp in dependantsProps) {
-            // --> TODO: Comming soon <-- //
             Type dependantPropType = dependantProp.PropertyType;
             object? dependantValue = dependantProp.GetValue(entity);
 
@@ -318,13 +317,13 @@ public class DatabaseUtils {
                 PropertyInfo dependencyProp = dependantType
                     .GetProperties()
                     .FirstOrDefault(
-                            dependantTypeProps => {
-                                DependencyAttribute? dependencyAttr = dependantType.GetCustomAttribute<DependencyAttribute>();
+                            dependantTypeProp => {
+                                DependencyAttribute? dependencyAttr = dependantTypeProp.GetCustomAttribute<DependencyAttribute>();
                                 if (dependencyAttr == null)
                                     return false;
 
 
-                                return dependantTypeProps.PropertyType.Namespace == entityType.Namespace;
+                                return dependantTypeProp.PropertyType.Namespace == entityType.Namespace;
                             }
                         )
                     ?? throw new SystemError($"Couldn't find dependency property ({entityType.Name}) in dependant entity ({dependantType.Name})", null);
