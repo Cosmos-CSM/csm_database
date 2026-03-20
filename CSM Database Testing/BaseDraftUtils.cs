@@ -164,7 +164,7 @@ static public class BaseDraftUtils {
         }
 
         if (string.IsNullOrWhiteSpace(@ref.Description)) {
-            @ref.Description = $"drafted entity {DateTime.Now.ToShortTimeString}";
+            @ref.Description = $"drafted entity {DateTime.Now:t}";
         }
 
         return @ref;

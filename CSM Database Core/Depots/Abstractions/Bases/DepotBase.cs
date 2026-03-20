@@ -257,7 +257,7 @@ public abstract class DepotBase<TDatabase, TEntity>
 
         TEntity entity = (TEntity)parameters.Entity;
 
-        // --> When the entity is not saved yet.
+        // --> When a previous version wasn't found
         if (entity.Id == 0) {
             if (!parameters.Create) {
                 throw new DepotError<TEntity>(DepotErrorEvents.CREATE_DISABLED);
