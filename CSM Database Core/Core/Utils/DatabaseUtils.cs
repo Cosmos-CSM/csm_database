@@ -329,7 +329,7 @@ public class DatabaseUtils {
                     ?? throw new SystemError($"Couldn't find dependency property ({entityType.Name}) in dependant entity ({dependantType.Name})", null);
 
 
-                if (!dependantPropType.IsAssignableTo(typeof(IEntity)))
+                if (!dependencyProp.PropertyType.IsAssignableTo(typeof(IEntity)))
                     throw new SystemError($"Dependency ({dependencyProp.Name}) found at Dependant ({dependantProp.Name}) but it isn't a IEntity", null);
 
                 IQueryable<IEntity> dbSet = GetDbSet(database, dependantType.GetType());
