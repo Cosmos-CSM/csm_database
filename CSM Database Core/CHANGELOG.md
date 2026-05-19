@@ -1,4 +1,18 @@
-# CSM Database CHANGELOG
+# CSM Database Core CHANGELOG
+
+## [4.4.0] - 19.05-2026
+
+### Changes
+
+- Reworked [Update] operations along depots for a easy management
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.1.0            | 4.0.0           |
+| Microsoft.EntityFrameworkCore           | 10.0.5           | 10.0.8          |
+| Microsoft.EntityFrameworkCore.SqlServer | 10.0.5           | 10.0.8          |
 
 ## [4.3.1] - 16.03-2026
 

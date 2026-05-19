@@ -1,5 +1,18 @@
 # CSM Database Testing CHANGELOG
 
+## [6.0.0] - 19.05-2026
+
+### Changes
+
+- Updated [TestingStoreManager] to handle sanitized data for integration testing iterations.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.1.0            | 4.0.0           |
+| xunit.v3								  | 3.2.2            | 3.2.2           |
+
 ## [5.1.0] - 16.03-2026
 
 ### Changes
