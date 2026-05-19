@@ -3,7 +3,6 @@ using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
 namespace CSM_Database_Core.Depots.Abstractions.Interfaces;
 
-
 /// <summary>
 ///     Represents create logic for a <see cref="IDepot{TEntity}"/>.
 /// </summary>

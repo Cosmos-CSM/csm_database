@@ -1,4 +1,5 @@
-﻿using CSM_Database_Core.Entities.Abstractions.Interfaces;
+﻿using CSM_Database_Core.Depots.Models.Structs;
+using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
 namespace CSM_Database_Core.Depots.Models;
 
@@ -20,4 +21,9 @@ public record UpdateInput<TEntity>
     ///     Wheter the record should be created if it doesn't exist in the database.
     /// </summary>
     public bool Create { get; init; } = false;
+
+    /// <summary>
+    ///     <see cref="Entity"/> relations to update.
+    /// </summary>
+    public Dictionary<string, RelationUpdate[]> Relations { get; set; } = [];
 }

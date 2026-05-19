@@ -71,8 +71,6 @@ public class TestingStoreManager
 
         DbContext db = GetDatabase(entity.Database);
 
-        entity = DatabaseUtils.SanitizeEntity(db, entity);
-
         db.Set<TEntity2>().Add(entity);
         db.SaveChanges();
 
@@ -101,16 +99,16 @@ public class TestingStoreManager
 
         foreach (TEntity2 entity in entities) {
             refs.Add(
-                    DatabaseUtils.SanitizeEntity(db, entity)
+                    await DatabaseUtils.SanitizeEntity(db, entity)
                 );
         }
 
         await db.Set<TEntity2>().AddRangeAsync(refs);
         await db.SaveChangesAsync();
 
-        _disposer.Push([..refs]);
+        _disposer.Push([.. refs]);
 
-        return [..refs];
+        return [.. refs];
     }
 
     /// <summary>
@@ -158,7 +156,7 @@ public class TestingStoreManager
         for (int i = 0; i < quantity; i++) {
 
             TEntity2 entity = RunEntityFactory(entityFactory);
-            entity = DatabaseUtils.SanitizeEntity(database, entity);
+            entity = await DatabaseUtils.SanitizeEntity(database, entity);
             entities.Add(entity);
         }
 

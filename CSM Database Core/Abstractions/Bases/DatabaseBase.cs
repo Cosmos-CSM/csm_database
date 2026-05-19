@@ -6,7 +6,6 @@ using CSM_Database_Core.Core.Models;
 using CSM_Database_Core.Core.Utils;
 using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
-using CSM_Foundation_Core.Abstractions.Bases;
 using CSM_Foundation_Core.Core.Utils;
 
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +26,7 @@ public abstract partial class DatabaseBase<TDatabases>
     where TDatabases : DbContext {
 
     /// <inheritdoc/>
-    public virtual string Sign { get; private set; } = "DBSign";
+    public virtual string Sign { get; protected set; } = "DBSign";
 
     /// <summary>
     ///     Database context options.
@@ -161,7 +160,7 @@ public abstract partial class DatabaseBase<TDatabases>
                     $"Setting up ORM",
                     new() {
                         { "Database", GetType()?.Namespace ?? "---" },
-                        { "Base", nameof(DatabaseBase<TDatabases>) }
+                        { "Base", nameof(DatabaseBase<>) }
                     }
                 );
         }
@@ -309,8 +308,7 @@ public abstract partial class DatabaseBase<TDatabases>
 }
 
 /// <inheritdoc cref="EntityBase"/>
-public abstract partial class EntityBase
-    : ObjectBase<IEntity>, IEntity {
+public abstract partial class EntityBase {
 
     /// <summary>
     ///     Describe to the Entity Framework manager how to handle the [Entity] object, its proeprties and relations, instructing

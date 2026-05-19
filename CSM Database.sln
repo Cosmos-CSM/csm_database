@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
+		local.integration_tests.runsettings = local.integration_tests.runsettings
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSM Database Core", "CSM Database Core\CSM Database Core.csproj", "{4A3C8AEE-DF2B-0967-7D71-5B7C61239D19}"
@@ -14,6 +15,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSM Database Testing", "CSM Database Testing\CSM Database Testing.csproj", "{82BDDC7B-DFF5-141A-9515-08F20D497D11}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unit Tests", "Unit Tests\Unit Tests.csproj", "{CBAAFF94-19D9-CA27-EB09-AC83990DFBC8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Integration Tests", "Integration Tests\Integration Tests.csproj", "{DEE0BFEC-6ED6-42CD-8F60-D3C2823DDDDA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseProxy", "DatabaseProxy\DatabaseProxy.csproj", "{5FFED488-8120-4A2C-BE06-A8E1D5E9D6E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +38,14 @@ Global
 		{CBAAFF94-19D9-CA27-EB09-AC83990DFBC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CBAAFF94-19D9-CA27-EB09-AC83990DFBC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CBAAFF94-19D9-CA27-EB09-AC83990DFBC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DEE0BFEC-6ED6-42CD-8F60-D3C2823DDDDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEE0BFEC-6ED6-42CD-8F60-D3C2823DDDDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DEE0BFEC-6ED6-42CD-8F60-D3C2823DDDDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DEE0BFEC-6ED6-42CD-8F60-D3C2823DDDDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FFED488-8120-4A2C-BE06-A8E1D5E9D6E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FFED488-8120-4A2C-BE06-A8E1D5E9D6E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FFED488-8120-4A2C-BE06-A8E1D5E9D6E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FFED488-8120-4A2C-BE06-A8E1D5E9D6E6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

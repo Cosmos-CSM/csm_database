@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 using CSM_Database_Core.Core.Attributes;
@@ -7,7 +6,7 @@ using CSM_Database_Core.Core.Models;
 using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
 using CSM_Foundation_Core;
-using CSM_Foundation_Core.Core.Exceptions;
+using CSM_Foundation_Core.Core.Errors;
 using CSM_Foundation_Core.Core.Utils;
 
 using Microsoft.EntityFrameworkCore;
@@ -187,45 +186,53 @@ public class DatabaseUtils {
     /// <exception cref="Exception">
     ///     Thrown when the relation entity couldn't be found in the database.
     /// </exception>
-    public static TEntity SanitizeEntity<TEntity>(DbContext database, TEntity entity)
+    public static async Task<TEntity> SanitizeEntity<TEntity>(DbContext database, TEntity entity)
         where TEntity : IEntity {
+
         Type entityType = entity.GetType();
-        PropertyInfo[] entityTypeProperties = entityType.GetProperties();
+        PropertyInfo[] entityTypeProps = entityType.GetProperties();
 
-        List<PropertyInfo> dependenciesProps = [];
-        List<PropertyInfo> dependantsProps = [];
-
-        foreach (PropertyInfo entityTypeProperty in entityTypeProperties) {
+        // Getting entity dependencies / dependants to sanitize. 
+        List<PropertyInfo> entityDependantsProps = [];
+        List<PropertyInfo> entityDependenciesProps = [];
+        foreach (PropertyInfo entityTypeProperty in entityTypeProps) {
             EntityDependencyAttribute? isDependency = entityTypeProperty.GetCustomAttribute<EntityDependencyAttribute>();
 
             if (isDependency != null) {
-                dependenciesProps.Add(entityTypeProperty);
+                entityDependenciesProps.Add(entityTypeProperty);
                 continue;
             }
 
             EntityDependantAttribute? isDependant = entityTypeProperty.GetCustomAttribute<EntityDependantAttribute>();
             if (isDependant != null) {
-                dependantsProps.Add(entityTypeProperty);
+                entityDependantsProps.Add(entityTypeProperty);
             }
         }
 
-        foreach (PropertyInfo dependencyProp in dependenciesProps) {
-            Type dependencyPropType = dependencyProp.PropertyType;
-            object? relationValue = dependencyProp.GetValue(entity);
 
-            if (relationValue is null) {
+        // Sanitizing dependencies process.
+        foreach (PropertyInfo entityDependencyProp in entityDependenciesProps) {
+            object? entityDependencyValue = entityDependencyProp.GetValue(entity);
+            if (entityDependencyValue is null) {
                 continue;
             }
 
-            bool isCollection = relationValue is IEnumerable<IEntity>;
-            bool isEntity = relationValue is IEntity;
+            Type entityDependencyType = entityDependencyProp.PropertyType;
+            bool isEntity = entityDependencyType.IsAssignableTo(typeof(IEntity));
+            bool isCollection = entityDependencyType.IsAssignableTo(typeof(ICollection<IEntity>));
 
             if (!isEntity && !isCollection) {
-                throw new SystemError($"Entity relation integrity problem, relation has [Relation] attribute but is not a IEnumerable<IEntity> neither IEntity assignable relation", null);
+                throw new SystemError(
+                    "Entity dependency is not IEntity / ICollection<IEntity> assignable",
+                        data: new Dictionary<string, object?> {
+                            { "EntityType", entityType.Name },
+                            { "DependencyType", entityDependencyType.Name },
+                        }
+                    );
             }
 
             if (isEntity) {
-                IEntity relEntity = (IEntity)relationValue;
+                IEntity relEntity = (IEntity)entityDependencyValue;
 
                 if (relEntity.Id <= 0) {
                     throw new SystemError($"Dependencies aren't allowed to be created on main Entity creation", null);
@@ -239,14 +246,14 @@ public class DatabaseUtils {
                     .FirstOrDefault()
                     ?? throw new SystemError($"Couldn't find relation entity ({relEntity.GetType().Name})[{relEntity.Id}]", null);
 
-                dependencyProp.SetValue(entity, dbRelEntity);
+                entityDependencyProp.SetValue(entity, dbRelEntity);
                 EntityEntry entityEntry = database.Entry(dbRelEntity);
                 if (entityEntry.State == EntityState.Detached) {
                     entityEntry.State = EntityState.Unchanged;
                 }
             } else {
                 // --> At this point we already know it's a collection relation.
-                IEnumerable<IEntity> relCollection = (IEnumerable<IEntity>)relationValue;
+                IEnumerable<IEntity> relCollection = (IEnumerable<IEntity>)entityDependencyValue;
                 if (!relCollection.Any())
                     continue;
 
@@ -291,11 +298,11 @@ public class DatabaseUtils {
                     )
                     ?? throw new SystemError("Unable to convert entity collection", null);
 
-                dependencyProp.SetValue(entity, castedCollection);
+                entityDependencyProp.SetValue(entity, castedCollection);
             }
         }
 
-        foreach (PropertyInfo dependantProp in dependantsProps) {
+        foreach (PropertyInfo dependantProp in entityDependantsProps) {
             Type dependantPropType = dependantProp.PropertyType;
             object? dependantValue = dependantProp.GetValue(entity);
 

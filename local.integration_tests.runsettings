@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+	<RunConfiguration>
+		<TargetFrameworkVersion>net10.0</TargetFrameworkVersion>
+		<ResultsDirectory>TestResults</ResultsDirectory>
+		<EnvironmentVariables>
+			<Q_CSMDQ.Connection>C:\Users\Usuar\Desktop\projects\Cosmos (CSM)\csm_database\DatabaseProxy\csmdq.dev.connection.json</Q_CSMDQ.Connection>
+		</EnvironmentVariables>
+	</RunConfiguration>
+</RunSettings>

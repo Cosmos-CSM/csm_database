@@ -1,15 +1,22 @@
-﻿using System.Data;
+﻿using System.Collections;
+using System.Data;
+using System.Reflection;
 
+using CSM_Database_Core.Core.Attributes.Abstractions.Interfaces;
 using CSM_Database_Core.Core.Errors;
 using CSM_Database_Core.Core.Extensions;
 using CSM_Database_Core.Core.Utils;
 using CSM_Database_Core.Depots.Abstractions.Interfaces;
 using CSM_Database_Core.Depots.Models;
+using CSM_Database_Core.Depots.Models.Structs;
 using CSM_Database_Core.Entities.Abstractions.Interfaces;
 
 using CSM_Foundation_Core.Abstractions.Interfaces;
+using CSM_Foundation_Core.Core.Errors;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.IdentityModel.Tokens;
 
 namespace CSM_Database_Core.Depots.Abstractions.Bases;
 
@@ -41,7 +48,7 @@ public abstract class DepotBase<TDatabase, TEntity>
     protected readonly DbSet<TEntity> _dbSet;
 
     /// <summary>
-    ///     Generates a new instance of a <see cref="DepotBase{TMigrationDatabases, TMigrationSet}"/> base.
+    ///     Generates a new instance of a <see cref="DepotBase{TDatabase, TEntity}"/> base.
     /// </summary>
     /// <param name="Database">
     ///     The <typeparamref name="TDatabase"/> that stores and handles the transactions for this <typeparamref name="TEntity"/> concept.
@@ -114,12 +121,12 @@ public abstract class DepotBase<TDatabase, TEntity>
 
     /// <inheritdoc/>
     public virtual async Task<TEntity> Create(TEntity entity) {
-        TEntity instEntity = (TEntity)entity;
+        TEntity instEntity = entity;
 
         instEntity.Timestamp = DateTime.UtcNow;
         instEntity.EvaluateWrite();
 
-        instEntity = DatabaseUtils.SanitizeEntity(_db, instEntity);
+        instEntity = await DatabaseUtils.SanitizeEntity(_db, instEntity);
         await _dbSet.AddAsync(instEntity);
 
         _disposer?.Push(instEntity);
@@ -138,7 +145,7 @@ public abstract class DepotBase<TDatabase, TEntity>
         foreach (TEntity instEntity in instEntities) {
             try {
                 TEntity attachedEntity = await Create(instEntity);
-                createdEntities = [.. createdEntities, (TEntity)attachedEntity];
+                createdEntities = [.. createdEntities, attachedEntity];
             } catch (Exception excep) {
                 if (sync) {
                     throw;
@@ -177,7 +184,7 @@ public abstract class DepotBase<TDatabase, TEntity>
         foreach (long id in ids) {
 
             try {
-                TEntity success = (TEntity)await Read(id);
+                TEntity success = await Read(id);
                 readings.Add(success);
             } catch (Exception ex) {
                 errors.Add(
@@ -247,62 +254,164 @@ public abstract class DepotBase<TDatabase, TEntity>
 
     /// <inheritdoc/>
     public async Task<UpdateOutput<TEntity>> Update(QueryInput<TEntity, UpdateInput<TEntity>> input) {
-        UpdateInput<TEntity> parameters = input.Parameters;
+        UpdateInput<TEntity> updateInput = input.Parameters;
 
-        IQueryable<TEntity> processedQuery = _dbSet.Process(
-                input,
-                (sourceQuery) => sourceQuery
-            )
-            .Cast<TEntity>();
-
-        TEntity entity = (TEntity)parameters.Entity;
-
-        // --> When a previous version wasn't found
-        if (entity.Id == 0) {
-            if (!parameters.Create) {
+        TEntity updateEntity = updateInput.Entity;
+        // --> When the update entity comes with no ID, we inferr is to be created.
+        if (updateEntity.Id <= 0) {
+            if (!updateInput.Create)
                 throw new DepotError<TEntity>(DepotErrorEvents.CREATE_DISABLED);
-            }
 
-            entity = (TEntity)await Create(entity);
-            _disposer?.Push(entity);
+            updateEntity = await Create(updateEntity);
+            _disposer?.Push(updateEntity);
 
             return new UpdateOutput<TEntity> {
                 Original = default,
-                Updated = entity,
+                Updated = updateEntity,
             };
         }
 
+        TEntity? originalEntity = null;
+        IQueryable<TEntity> query = _dbSet;
 
-        TEntity? original = await processedQuery
-            .Where(obj => obj.Id == entity.Id)
+        originalEntity = await query
+            .Where(obj => obj.Id == updateEntity.Id)
             .AsNoTracking()
+            .FirstOrDefaultAsync();
+
+        // --> When the update entity comes with ID, but there was no enitty stored with that ID, we check if creation is valid.
+        if (originalEntity == null) {
+            if (!updateInput.Create)
+                throw new DepotError<TEntity>(DepotErrorEvents.UNFOUND, $"{typeof(TEntity).Name}.Id = {updateEntity.Id}");
+
+            updateEntity.Id = 0;
+            updateEntity = await Create(updateEntity);
+            _disposer?.Push(updateEntity);
+
+            return new UpdateOutput<TEntity> {
+                Original = default,
+                Updated = updateEntity,
+            };
+        }
+
+        // --> Here we know the operation is to update an existing entity.
+        TEntity trackedEntity = await query
+            .Where(obj => obj.Id == originalEntity.Id)
             .FirstOrDefaultAsync()
             ?? throw new DepotError<TEntity>(DepotErrorEvents.UNFOUND);
 
-        if (original == null) {
-            if (!parameters.Create)
-                throw new DepotError<TEntity>(DepotErrorEvents.UNFOUND, $"{typeof(TEntity).Name}.Id = {entity.Id}");
+        // Updating scalar values.
+        _db.Entry(trackedEntity).CurrentValues.SetValues(updateEntity);
+        EntityBase trackedEntityBase = (trackedEntity as EntityBase)!;
 
-            entity.Id = 0;
-            entity = (TEntity)await Create(entity);
-            _disposer?.Push(entity);
+        // Updating relations instructions.
+        Dictionary<string, RelationUpdate[]> relationsUpdates = updateInput.Relations;
+        if (!relationsUpdates.IsNullOrEmpty()) {
 
-            return new UpdateOutput<TEntity> {
-                Original = default,
-                Updated = entity,
-            };
+            foreach (KeyValuePair<string, RelationUpdate[]> relationUpdates in relationsUpdates) {
+                string relationName = relationUpdates.Key;
+                RelationUpdate[] updates = relationUpdates.Value;
+
+                PropertyInfo relationPropertyInfo = trackedEntityBase.GetProperty(relationName);
+                IEnumerable relationCollection = (IEnumerable)relationPropertyInfo.GetValue(trackedEntity)!;
+                IEnumerable<IEntity> castedCollection = relationCollection.Cast<IEntity>();
+
+                MethodInfo addMethod = relationCollection.GetType().GetMethod("Add")!;
+
+                dynamic dynamicCollection = relationCollection;
+
+                foreach (RelationUpdate update in updates) {
+                    object? collectionItem = castedCollection.FirstOrDefault(
+                            relationItem => relationItem.Id == update.Entity.Id
+                        );
+
+                    switch (update.Action) {
+                        case RelationUpdateAction.ADD:
+                            if (collectionItem is not null)
+                                continue;
+
+                            _db.Attach(update.Entity);
+                            addMethod.Invoke(relationCollection, [update.Entity]);
+                            break;
+                        case RelationUpdateAction.REMOVE:
+                            if (collectionItem is null)
+                                continue;
+
+                            dynamicCollection.Remove(collectionItem);
+                            break;
+                        default:
+                            throw new NotImplementedException($"Relation Update action ({update.Action}) not implemented.");
+                    }
+                }
+            }
         }
 
-        entity = DatabaseUtils.SanitizeEntity(_db, entity);
-        _dbSet.Update(entity);
-        await _db.SaveChangesAsync();
-        _disposer?.Push(entity);
+        // Updating relations that are not collections.
+        Type entityType = typeof(TEntity);
+        PropertyInfo[] entityTypeProperties = entityType.GetProperties();
 
-        _db.ChangeTracker.Clear();
-        entity = await Read(entity.Id);
+        IEnumerable<PropertyInfo> flatRelations = entityTypeProperties
+            .Where(
+                    entityTypeProperty => {
+                        IEnumerable<IRelationAttribute> attrs = entityTypeProperty
+                            .GetCustomAttributes(inherit: true)
+                            .OfType<IRelationAttribute>();
+
+
+                        IRelationAttribute? attr = attrs.FirstOrDefault();
+                        if(attr is null)
+                            return false;
+
+                        return !attr.IsCollection;
+                    }
+                );
+
+        // Updating no collection relations.
+        foreach(PropertyInfo flatRelation in flatRelations) {
+
+            object? updatedValue = flatRelation.GetValue(updateEntity);
+            object? currentValue = flatRelation.GetValue(trackedEntity);
+
+            if (updatedValue != currentValue) {
+                flatRelation.SetValue(trackedEntity, updatedValue);
+            }
+        }
+
+        await _db.SaveChangesAsync();    
+       
+
+        IQueryable<TEntity> postQuery = query;
+       
+        // Applying hard auto-includes for post query.
+        IEntityType dbProxyType = _db.Model.FindEntityType(typeof(TEntity))
+            ??  throw new SystemError($"Unable to locate entity type ({typeof(TEntity).Name}) at database modeel ({_db.GetType().Name}).");
+
+        IEnumerable<string>? autoLoadedNavs =
+               dbProxyType
+              .GetNavigations()
+              .Where(n => n.IsEagerLoaded)
+              .Select(
+                        nav => nav.Name
+                   );
+
+        foreach(string autoLoadedNav in autoLoadedNavs) {
+                postQuery.Include(autoLoadedNav);
+        }
+
+        if (input.PostProcessor is not null) {
+            postQuery = input.PostProcessor(postQuery);
+        }
+
+        updateEntity = await postQuery
+            .AsNoTrackingWithIdentityResolution()
+            .FirstOrDefaultAsync(
+                    obj => obj.Id == trackedEntity.Id
+                )
+            ?? throw new DepotError<TEntity>(DepotErrorEvents.UNFOUND, $"{typeof(TEntity).Name}.Id = {trackedEntity.Id}");
+
         return new UpdateOutput<TEntity> {
-            Original = original,
-            Updated = entity,
+            Original = originalEntity,
+            Updated = updateEntity,
         };
     }
 
@@ -331,7 +440,7 @@ public abstract class DepotBase<TDatabase, TEntity>
         foreach (long id in ids) {
 
             try {
-                TEntity success = (TEntity)await Delete(id);
+                TEntity success = await Delete(id);
                 successes.Add(success);
             } catch (Exception ex) {
                 failures.Add(
@@ -370,7 +479,7 @@ public abstract class DepotBase<TDatabase, TEntity>
 
         foreach (TEntity entity in entities) {
             try {
-                TEntity deletedEntity = (TEntity)await Delete(entity.Id);
+                TEntity deletedEntity = await Delete(entity.Id);
                 successes.Add(deletedEntity);
             } catch (Exception exception) {
                 failures.Add(
@@ -384,7 +493,7 @@ public abstract class DepotBase<TDatabase, TEntity>
 
     /// <inheritdoc/>
     public async Task<TEntity> Delete(TEntity entity) {
-        _dbSet.Remove((TEntity)entity);
+        _dbSet.Remove(entity);
         await _db.SaveChangesAsync();
         return entity;
     }
@@ -396,7 +505,7 @@ public abstract class DepotBase<TDatabase, TEntity>
         foreach (TEntity entity in entities.Cast<TEntity>()) {
 
             try {
-                TEntity success = (TEntity)await Delete(entity);
+                TEntity success = await Delete(entity);
                 successes.Add(success);
             } catch (Exception ex) {
                 failures.Add(
