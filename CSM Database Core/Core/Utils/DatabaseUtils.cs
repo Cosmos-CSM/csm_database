@@ -201,14 +201,20 @@ public class DatabaseUtils {
             if (isDependency != null) {
                 entityDependenciesProps.Add(entityTypeProperty);
                 continue;
-            }
+        }
 
             EntityDependantAttribute? isDependant = entityTypeProperty.GetCustomAttribute<EntityDependantAttribute>();
             if (isDependant != null) {
                 entityDependantsProps.Add(entityTypeProperty);
-            }
+        }
         }
 
+        IEnumerable<PropertyInfo> relationProperties = entity
+            .GetType()
+            .GetProperties()
+            .Where(
+                (pi) => pi.GetCustomAttribute<EntityRelationAttribute>() != null
+            );
 
         // Sanitizing dependencies process.
         foreach (PropertyInfo entityDependencyProp in entityDependenciesProps) {
