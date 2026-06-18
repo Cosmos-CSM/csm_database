@@ -359,15 +359,15 @@ public abstract class DepotBase<TDatabase, TEntity>
 
 
                         IRelationAttribute? attr = attrs.FirstOrDefault();
-                        if(attr is null)
+                        if (attr is null)
                             return false;
 
-                        return !attr.IsCollection;
+                        return !entityTypeProperty.PropertyType.IsAssignableTo(typeof(ICollection<>));
                     }
                 );
 
         // Updating no collection relations.
-        foreach(PropertyInfo flatRelation in flatRelations) {
+        foreach (PropertyInfo flatRelation in flatRelations) {
 
             object? updatedValue = flatRelation.GetValue(updateEntity);
             object? currentValue = flatRelation.GetValue(trackedEntity);
@@ -377,14 +377,14 @@ public abstract class DepotBase<TDatabase, TEntity>
             }
         }
 
-        await _db.SaveChangesAsync();    
-       
+        await _db.SaveChangesAsync();
+
 
         IQueryable<TEntity> postQuery = query;
-       
+
         // Applying hard auto-includes for post query.
         IEntityType dbProxyType = _db.Model.FindEntityType(typeof(TEntity))
-            ??  throw new SystemError($"Unable to locate entity type ({typeof(TEntity).Name}) at database modeel ({_db.GetType().Name}).");
+            ?? throw new SystemError($"Unable to locate entity type ({typeof(TEntity).Name}) at database modeel ({_db.GetType().Name}).");
 
         IEnumerable<string>? autoLoadedNavs =
                dbProxyType
@@ -394,8 +394,8 @@ public abstract class DepotBase<TDatabase, TEntity>
                         nav => nav.Name
                    );
 
-        foreach(string autoLoadedNav in autoLoadedNavs) {
-                postQuery.Include(autoLoadedNav);
+        foreach (string autoLoadedNav in autoLoadedNavs) {
+            postQuery.Include(autoLoadedNav);
         }
 
         if (input.PostProcessor is not null) {

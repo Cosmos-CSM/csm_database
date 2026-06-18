@@ -10,7 +10,7 @@ public class EntityDependencyAttribute
     : RelationAttributeBase {
 
     /// <inheritdoc/>
-    public EntityDependencyAttribute(string name, Type type, bool isCollection = false)
-        : base(name, type, isCollection) {
+    public EntityDependencyAttribute(string? name = null)
+        : base(name) {
     }
 }
