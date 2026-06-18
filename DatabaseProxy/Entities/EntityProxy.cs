@@ -14,11 +14,11 @@ public class EntityProxy
 
     public override Type Database { get; init; } = typeof(DatabaseProxy);
 
-    [EntityDependency(nameof(EntityDependencyProxy), typeof(EntityDependencyProxy))]
+    [EntityDependency]
     public EntityDependencyProxy EntityDependencyProxy { get; set; } = default!;
 
 
-    [EntityDependant(nameof(EntityDependantProxies), typeof(EntityDependantProxy), true)]
+    [EntityDependant]
     public ICollection<EntityDependantProxy> EntityDependantProxies { get; set; } = [];
 
 
