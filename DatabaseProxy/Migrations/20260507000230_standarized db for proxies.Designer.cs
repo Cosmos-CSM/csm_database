@@ -13,7 +13,9 @@ namespace DatabaseProxy.Migrations
 {
     [DbContext(typeof(DatabaseProxy))]
     [Migration("20260507000230_standarized db for proxies")]
+#pragma warning disable CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
     partial class standarizeddbforproxies
+#pragma warning restore CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

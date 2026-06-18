@@ -156,7 +156,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
         int low = random.Next(int.MinValue, int.MaxValue);
 
         // Combine them into a long value
-        long randomLong = ((long)high << 32) | (uint)low;
+        long randomLong = (((long)high << 32) | (uint)low) & long.MaxValue;
         if (!noStored) {
             return randomLong;
         }

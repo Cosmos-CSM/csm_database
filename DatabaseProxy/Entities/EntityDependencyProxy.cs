@@ -12,6 +12,6 @@ public class EntityDependencyProxy
 
     public override Type Database { get; init; } = typeof(DatabaseProxy);
 
-    [EntityDependant(nameof(EntityProxies), typeof(EntityProxy), true)]
+    [EntityDependant]
     public ICollection<EntityProxy> EntityProxies { get; set; } = [];
 }
