@@ -27,7 +27,8 @@ public class EntityProxy
         etBuilder.Link<EntityProxy, EntityDependencyProxy>(
                 nameof(EntityDependencyProxy),
                 targetRef: nameof(EntityDependencyProxy.EntityProxies),
-                isAutoLoaded: true
+                isAutoLoaded: true,
+                deleteBehavior: Microsoft.EntityFrameworkCore.DeleteBehavior.Cascade
             );
     }
 }
