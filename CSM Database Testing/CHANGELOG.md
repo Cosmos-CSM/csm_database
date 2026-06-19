@@ -1,5 +1,18 @@
 # CSM Database Testing CHANGELOG
 
+## [7.0.0] - 18.06-2026
+
+### Fixed
+
+- Exposing as virtual some missing test cases from [DepotTestsBase].
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.1.0            | 4.0.0           |
+| xunit.v3								  | 3.2.2            | 3.2.2           |
+
 ## [6.0.0] - 19.05-2026
 
 ### Changes

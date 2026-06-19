@@ -1,5 +1,23 @@
 # CSM Database Core CHANGELOG
 
+## [6.0.0] - 18.06-2026
+
+### Fixes
+
+- Fixed [SanitizeEntity] issue that was causing wrong relation detections for collections.
+
+### Removed
+
+- Removed [EntityDependencyAttribute] and [EntityDependantAttribute] now we only use [EntityRelation].
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 4.0.0            | 4.0.0           |
+| Microsoft.EntityFrameworkCore           | 10.0.8           | 10.0.9          |
+| Microsoft.EntityFrameworkCore.SqlServer | 10.0.8           | 10.0.9          |
+
 ## [5.0.0] - 18.06-2026
 
 ### Changes

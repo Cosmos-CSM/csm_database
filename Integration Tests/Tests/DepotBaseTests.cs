@@ -22,6 +22,10 @@ public class DepotBaseTests
         };
     }
 
+    /// <summary>
+    ///     Method: <see cref="DepotBase{TDatabase, TEntity}.Update(QueryInput{TEntity, UpdateInput{TEntity}})"/> 
+    ///     Expectation: Success updating.
+    /// </summary>
     public override async Task Update_Single_Success() {
         //Expectation
         EntityDependencyProxy dependency = Store(
@@ -64,7 +68,7 @@ public class DepotBaseTests
         Assert.NotNull(updateOutput.Original);
         Assert.Empty(updateOutput.Original.EntityDependantProxies);
         Assert.NotEmpty(updateOutput.Updated.EntityDependantProxies);
-        
+
         Assert.Contains(
                 updateOutput.Updated.EntityDependantProxies,
                 (dependantEntry) => dependantEntry.Id == dependant.Id
