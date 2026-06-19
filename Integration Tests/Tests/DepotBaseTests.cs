@@ -28,15 +28,15 @@ public class DepotBaseTests
     /// </summary>
     public override async Task Update_Single_Success() {
         //Expectation
-        EntityDependencyProxy dependency = Store(
+        EntityDependencyProxy dependency = await Store(
                 new EntityDependencyProxy()
             );
 
-        EntityDependantProxy dependant = Store(
+        EntityDependantProxy dependant = await Store(
                 new EntityDependantProxy()
             );
 
-        EntityProxy testEntity = Store(
+        EntityProxy testEntity = await Store(
                 new EntityProxy()
             );
 
