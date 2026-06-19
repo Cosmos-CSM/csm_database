@@ -260,7 +260,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     /// </summary>
     [Fact(DisplayName = "[Read Single]: Entity read by (Id)")]
     public virtual async Task Read_Single_ById_Success() {
-        TEntity sample = Store(EntityFactory);
+        TEntity sample = await Store(EntityFactory);
 
         TEntity readEntity = await _depot.Read(sample.Id);
         Assert.Multiple(
@@ -532,7 +532,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     /// </summary>
     [Fact(DisplayName = $"[Delete Single]: Entity deleted by (Id)")]
     public virtual async Task Delete_Single_ById_Success() {
-        TEntity entity = Store(EntityFactory);
+        TEntity entity = await Store(EntityFactory);
 
         await _depot.Delete(entity.Id);
         await CommitSampleEntities([]);
@@ -721,7 +721,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
             throw SkipException.ForSkip("This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
         }
 
-        TEntity sampleEntity = Store(EntityFactory);
+        TEntity sampleEntity = await Store(EntityFactory);
         object? sampleValue = _evaluableProperty.GetValue(sampleEntity);
 
         ViewOutput<TEntity> qOut = await _depot.View(
