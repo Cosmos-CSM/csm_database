@@ -14,6 +14,20 @@
 | Microsoft.EntityFrameworkCore           | 10.0.8           | 10.0.9          |
 | Microsoft.EntityFrameworkCore.SqlServer | 10.0.8           | 10.0.9          |
 
+## [6.0.5] - 18.06-2026
+
+### Fixes
+
+- Fixed [DepotBase] [Update] method issue for a safe entity relation update just when the Ids are different.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 4.0.0            | 4.0.0           |
+| Microsoft.EntityFrameworkCore           | 10.0.8           | 10.0.9          |
+| Microsoft.EntityFrameworkCore.SqlServer | 10.0.8           | 10.0.9          |
+
 ## [6.0.4] - 18.06-2026
 
 ### Fixes
