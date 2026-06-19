@@ -1,5 +1,19 @@
 # CSM Database Core CHANGELOG
 
+## [6.0.4] - 18.06-2026
+
+### Fixes
+
+- Fixed [DepotBase] [Update] method issue that was causing not relation inclussion on original entity object.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 4.0.0            | 4.0.0           |
+| Microsoft.EntityFrameworkCore           | 10.0.8           | 10.0.9          |
+| Microsoft.EntityFrameworkCore.SqlServer | 10.0.8           | 10.0.9          |
+
 ## [6.0.3] - 18.06-2026
 
 ### Fixes

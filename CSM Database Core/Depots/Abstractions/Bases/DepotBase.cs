@@ -274,9 +274,15 @@ public abstract class DepotBase<TDatabase, TEntity>
         TEntity? originalEntity = null;
         IQueryable<TEntity> query = _dbSet;
 
-        originalEntity = await query
-            .Where(obj => obj.Id == updateEntity.Id)
-            .AsNoTracking()
+        IQueryable<TEntity> ogEntityQuery = query
+            .AsNoTrackingWithIdentityResolution()
+            .Where(obj => obj.Id == updateEntity.Id);
+
+        if (input.PostProcessor != null) {
+            ogEntityQuery = input.PostProcessor(ogEntityQuery);
+        }
+
+        originalEntity = await ogEntityQuery
             .FirstOrDefaultAsync();
 
         // --> When the update entity comes with ID, but there was no enitty stored with that ID, we check if creation is valid.

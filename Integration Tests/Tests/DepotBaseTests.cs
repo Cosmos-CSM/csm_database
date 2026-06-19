@@ -29,8 +29,12 @@ public class DepotBaseTests
     public override async Task Update_Single_Success() {
         //Expectation
         EntityProxy testEntity = await Store(
-                new EntityProxy()
-            );
+               new EntityProxy {
+                   
+               }
+           );
+
+
         EntityDependencyProxy dependency = await Store(
                 new EntityDependencyProxy()
             );
@@ -38,6 +42,13 @@ public class DepotBaseTests
         EntityDependantProxy dependant = await Store(
                 new EntityDependantProxy()
             );
+
+        await Store(
+                new EntityDependantProxy {
+                    EntityProxy = testEntity
+                }
+            );
+
         testEntity.EntityDependencyProxy = dependency;
 
         UpdateOutput<EntityProxy> updateOutput = await _depot.Update(
@@ -62,17 +73,22 @@ public class DepotBaseTests
                 }
             );
 
-        Assert.NotNull(updateOutput.Original);
-        Assert.Empty(updateOutput.Original.EntityDependantProxies);
-        Assert.NotEmpty(updateOutput.Updated.EntityDependantProxies);
+        EntityProxy? ogEntity = updateOutput.Original;
+        EntityProxy updatedEntity = updateOutput.Updated;
+
+
+        Assert.NotNull(ogEntity);
+        Assert.Single(ogEntity.EntityDependantProxies);
+
+        Assert.NotEmpty(updatedEntity.EntityDependantProxies);
 
         Assert.Contains(
-                updateOutput.Updated.EntityDependantProxies,
+                updatedEntity.EntityDependantProxies,
                 (dependantEntry) => dependantEntry.Id == dependant.Id
             );
         Assert.Equal(
                 dependency.Id,
-                updateOutput.Updated.EntityDependencyProxy.Id
+                updatedEntity.EntityDependencyProxy.Id
             );
     }
 }
