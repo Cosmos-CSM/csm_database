@@ -209,15 +209,17 @@ public class DatabaseUtils {
             }
 
             Type relType = entityRelation.PropertyType;
-            Type genericDefinition = relType.GetGenericTypeDefinition();
-
             bool isEntity = relType.IsAssignableTo(typeof(IEntity));
-            bool isCollection = genericDefinition.IsAssignableTo(typeof(ICollection<>));
-
             bool isCollectionOfEntities = false;
-            if (isCollection) {
-                Type elementType = relType.GetGenericArguments()[0];
-                isCollectionOfEntities = typeof(IEntity).IsAssignableFrom(elementType);
+
+            if(!isEntity) {
+                Type genericDefinition = relType.GetGenericTypeDefinition();
+                bool isCollection = genericDefinition.IsAssignableTo(typeof(ICollection<>));
+
+                if (isCollection) {
+                    Type elementType = relType.GetGenericArguments()[0];
+                    isCollectionOfEntities = typeof(IEntity).IsAssignableFrom(elementType);
+                }
             }
 
             if (!isEntity && !isCollectionOfEntities) {
