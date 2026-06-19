@@ -209,7 +209,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     ///     Expectation: Success creation.
     /// </summary>
     [Fact(DisplayName = "[Create Single]: Entity created")]
-    public async Task Create_Single_Success() {
+    public virtual async Task Create_Single_Success() {
         TEntity sample = Sampling();
 
         TEntity storedEntity = await _depot.Create(sample);
@@ -235,7 +235,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     ///     Expectation: Success creation.
     /// </summary>
     [Fact(DisplayName = "[Create Batch]: Entities created")]
-    public async Task Create_Batch_Success() {
+    public virtual async Task Create_Batch_Success() {
         TEntity[] samples = Sampling(3);
 
         BatchOperationOutput<TEntity> qOut = await _depot.Create(samples);
@@ -586,7 +586,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     ///     Expectation: Success view.
     /// </summary>
     [Fact(DisplayName = "[View]: Simple view calculation")]
-    public async Task View_Scucess() {
+    public virtual async Task View_Scucess() {
         const int viewPage = 1;
         await Store(30, EntityFactory);
 
@@ -613,7 +613,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     ///     Expectation: Success view.
     /// </summary>
     [Fact(DisplayName = "[View]: Specific page")]
-    public async Task View_OnSpecificPage_Sucess() {
+    public virtual async Task View_OnSpecificPage_Sucess() {
         const int viewPage = 2;
         await Store(30, EntityFactory);
 
@@ -640,7 +640,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     ///     Expectation: Success view.
     /// </summary>
     [Fact(DisplayName = $"[View]: Ordering by property")]
-    public async Task View_OnOrdering_Success() {
+    public virtual async Task View_OnOrdering_Success() {
 
         ViewOutput<TEntity> orderedViewOutput = await _depot.View(
                         new QueryInput<TEntity, ViewInput<TEntity>> {
@@ -686,7 +686,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     ///     Expectation: Success view.
     /// </summary>
     [Fact(DisplayName = "[View]: Using date filter")]
-    public async Task View_DateFiltered_Success() {
+    public virtual async Task View_DateFiltered_Success() {
         ViewOutput<TEntity> viewOutput = await _depot.View(
                 new QueryInput<TEntity, ViewInput<TEntity>> {
                     Parameters = new() {
@@ -716,7 +716,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     ///     Expectation: Success view.
     /// </summary>
     [Fact(DisplayName = "[View]: Using property filter (CONTAINS)")]
-    public async Task View_ProeprtyFilteredByContains_Success() {
+    public virtual async Task View_ProeprtyFilteredByContains_Success() {
         if (_evaluableProperty.PropertyType != typeof(string)) {
             throw SkipException.ForSkip("This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
         }
@@ -755,7 +755,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     ///     Expectation: Success view.
     /// </summary>
     [Fact(DisplayName = "[View]: Using filter logical (OR)")]
-    public async Task View_LogicalFilteredByOr_Success() {
+    public virtual async Task View_LogicalFilteredByOr_Success() {
         if (_evaluableProperty.PropertyType != typeof(string)) {
             throw SkipException.ForSkip("This assertion is only available for entities that have an evaluable string property since CONTAINS method is currently only supported to filter string type properties.");
         }

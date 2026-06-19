@@ -1,10 +1,10 @@
 # CSM Database Testing CHANGELOG
 
-## [x.x.x] - xx.xx-xxxx
+## [7.0.0] - 18.06-2026
 
-### Changes
+### Fixed
 
-- 
+- Exposing as virtual some missing test cases from [DepotTestsBase].
 
 #### Dependencies
 
