@@ -303,67 +303,6 @@ public class DatabaseUtils {
             }
         }
 
-        foreach (PropertyInfo dependantProp in entityRelations) {
-            Type dependantPropType = dependantProp.PropertyType;
-            object? dependantValue = dependantProp.GetValue(entity);
-
-            if (dependantValue is null) {
-                continue;
-            }
-
-            if (dependantValue is not IEnumerable<IEntity> dependantEntities) {
-                throw new SystemError($"Entity dependant integrity error, a dependant always must be a collection", null);
-            }
-
-            // --> Looking into dependants to sanitize its dependency.
-            foreach (IEntity dependantEntity in dependantEntities) {
-                if (dependantEntity.Id == 0)
-                    throw new SystemError($"Dependants aren't allowed to be created on main Entity creation", null);
-
-
-                Type dependantType = dependantEntity.GetType();
-                PropertyInfo[] dependantProps = dependantType.GetProperties();
-                PropertyInfo dependencyProp = dependantProps
-                    .FirstOrDefault(
-                            dependantTypeProp => {
-                                EntityRelationAttribute? dependencyAttr = dependantTypeProp.GetCustomAttribute<EntityRelationAttribute>();
-                                if (dependencyAttr == null)
-                                    return false;
-
-
-                                return dependantTypeProp.PropertyType == entityType;
-                            }
-                        )
-                    ?? throw new SystemError($"Couldn't find dependency property ({entityType.Name}) in dependant entity ({dependantType.Name})", null);
-
-
-                if (!dependencyProp.PropertyType.IsAssignableTo(typeof(IEntity)))
-                    throw new SystemError($"Dependency ({dependencyProp.Name}) found at Dependant ({dependantProp.Name}) but it isn't a IEntity", null);
-
-                IQueryable<IEntity> dbSet = GetDbSet(database, dependantType);
-
-                IEntity trackedDependant = dbSet.Where(
-                        entity => entity.Id == dependantEntity.Id
-                    )
-                    .FirstOrDefault()
-                    ?? throw new SystemError($"Couldn't find dependant ({dependantEntity.Id}) [{dependantType.Name}] in database", null);
-
-
-                object? dependencyValue = dependencyProp.GetValue(trackedDependant);
-
-
-                if (dependencyValue == null) {
-                    dependencyProp.SetValue(trackedDependant, entity);
-                    continue;
-                }
-
-                IEntity dependencyEntity = (IEntity)dependencyValue;
-                if (dependencyEntity.Id != entity.Id) {
-                    dependencyProp.SetValue(trackedDependant, entity);
-                }
-            }
-        }
-
         return entity;
     }
 
