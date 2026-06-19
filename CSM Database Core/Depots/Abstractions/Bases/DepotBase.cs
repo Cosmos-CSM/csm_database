@@ -381,7 +381,14 @@ public abstract class DepotBase<TDatabase, TEntity>
             object? updatedValue = flatRelation.GetValue(updateEntity);
             object? currentValue = flatRelation.GetValue(trackedEntity);
 
-            if (updatedValue != currentValue) {
+            if (
+                updatedValue != currentValue
+                || (
+                    updatedValue is IEntity updatedValueEntity
+                    && currentValue is IEntity currentValueEntity
+                    && updatedValueEntity.Id != currentValueEntity.Id
+                )
+            ) {
                 flatRelation.SetValue(trackedEntity, updatedValue);
             }
         }
