@@ -1,5 +1,18 @@
 # CSM Database Testing CHANGELOG
 
+## [7.0.2] - 18.06-2026
+
+### Fixed
+
+- Fixed code style
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 2.1.0            | 4.0.0           |
+| xunit.v3								  | 3.2.2            | 3.2.2           |
+
 ## [7.0.1] - 18.06-2026
 
 ### Fixed

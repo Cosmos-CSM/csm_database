@@ -28,6 +28,9 @@ public class DepotBaseTests
     /// </summary>
     public override async Task Update_Single_Success() {
         //Expectation
+        EntityProxy testEntity = await Store(
+                new EntityProxy()
+            );
         EntityDependencyProxy dependency = await Store(
                 new EntityDependencyProxy()
             );
@@ -35,18 +38,12 @@ public class DepotBaseTests
         EntityDependantProxy dependant = await Store(
                 new EntityDependantProxy()
             );
-
-        EntityProxy testEntity = await Store(
-                new EntityProxy()
-            );
-
         testEntity.EntityDependencyProxy = dependency;
-        testEntity.EntityDependantProxies.Add(dependant);
+
         UpdateOutput<EntityProxy> updateOutput = await _depot.Update(
                 new QueryInput<EntityProxy, UpdateInput<EntityProxy>> {
                     Parameters = new UpdateInput<EntityProxy> {
                         Entity = testEntity,
-                        Create = true,
                         Relations = {
                             {
                                 nameof(EntityProxy.EntityDependantProxies),
