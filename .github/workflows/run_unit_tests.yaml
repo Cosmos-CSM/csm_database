@@ -52,4 +52,4 @@ jobs:
 
       - name: Run tests
         run: |
-          dotnet test ./Unit Tests/Unit Tests.csproj --no-build --configuration Release --verbosity normal
+          dotnet test "./Unit Tests/Unit Tests.csproj" --no-build --configuration Release --verbosity normal
