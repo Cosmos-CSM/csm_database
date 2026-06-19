@@ -362,7 +362,10 @@ public abstract class DepotBase<TDatabase, TEntity>
                         if (attr is null)
                             return false;
 
-                        return !entityTypeProperty.PropertyType.IsAssignableTo(typeof(ICollection<>));
+                        Type relType = entityTypeProperty.PropertyType;
+                        bool isSingleRelation = relType.IsAssignableTo(typeof(IEntity));
+
+                        return isSingleRelation;
                     }
                 );
 

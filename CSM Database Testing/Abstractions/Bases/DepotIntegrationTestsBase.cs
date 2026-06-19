@@ -437,6 +437,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
                     },
                 }
             );
+
         await CommitSampleEntities([updateOutput.Updated]);
 
         Assert.Multiple(
