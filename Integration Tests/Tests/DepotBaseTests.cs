@@ -30,10 +30,9 @@ public class DepotBaseTests
         //Expectation
         EntityProxy testEntity = await Store(
                new EntityProxy {
-                   
+
                }
            );
-
 
         EntityDependencyProxy dependency = await Store(
                 new EntityDependencyProxy()
@@ -55,16 +54,22 @@ public class DepotBaseTests
                 new QueryInput<EntityProxy, UpdateInput<EntityProxy>> {
                     Parameters = new UpdateInput<EntityProxy> {
                         Entity = testEntity,
-                        Relations = {
+                        Relations = new Dictionary<string, IDictionary<string, RelationUpdate[]>> {
                             {
                                 nameof(EntityProxy.EntityDependantProxies),
-                                [
-                                        new RelationUpdate {
-                                                Action = RelationUpdateAction.ADD,
-                                                Entity = dependant
-                                            },
-                                    ]
-                            }
+                                new Dictionary<string, RelationUpdate[]> {
+                                    {
+                                        string.Empty,
+                                        new RelationUpdate[] {
+                                            new() {
+                                                Entity = dependant,
+                                                Action = RelationUpdateAction.ADD
+                                            }
+                                        }
+                                    }
+                                }
+
+                            },
                         },
                     },
                     PostProcessor = (query) => {

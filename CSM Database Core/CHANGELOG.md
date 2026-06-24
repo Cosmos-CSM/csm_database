@@ -1,6 +1,20 @@
 # CSM Database Core CHANGELOG
 
-## [6.0.5] - 18.06-2026
+## [6.1.0] - 24.06-2026
+
+### Added
+
+- Now relations are able to be added no matter what direction of relationship they have at update operations.
+
+#### Dependencies
+
+| Package                                 | Previous Version | New Version     |
+|:----------------------------------------|:----------------:|:---------------:|
+| CSM.Foundation.Core                     | 4.0.0            | 4.0.0           |
+| Microsoft.EntityFrameworkCore           | 10.0.8           | 10.0.9          |
+| Microsoft.EntityFrameworkCore.SqlServer | 10.0.8           | 10.0.9          |
+
+## [6.0.6] - 18.06-2026
 
 ### Fixes
 
