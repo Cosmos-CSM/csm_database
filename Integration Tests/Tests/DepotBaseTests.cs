@@ -18,9 +18,11 @@ public class DepotBaseTests
     : DepotIntegrationTestsBase<EntityProxy, DepotProxy, DatabaseProxy.DatabaseProxy> {
 
     protected override async Task<EntityProxy> EntityFactory(string Entropy) {
-        return await Task.FromResult(new EntityProxy {
-
-        });
+        return new EntityProxy {
+            EntityDependencyProxy = await _storeManager.Store(
+                    new EntityDependencyProxy()
+                )
+        };
     }
 
     /// <summary>
