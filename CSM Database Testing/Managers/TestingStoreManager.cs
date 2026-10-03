@@ -214,7 +214,7 @@ public class TestingStoreManager
     ///     Collection of <see cref="IEntity"/> instances to look up.
     /// </param>
     /// <returns>
-    ///     Array of <typeparamref name="TEntity2"/> instances whose <see cref="IEntity.Id"/> is contained in <paramref name="entities"/>.
+    ///     A list of <typeparamref name="TEntity2"/> instances whose <see cref="IEntity.Id"/> is contained in <paramref name="entities"/>.
     ///     Only the IDs that exist in the database are included.
     /// </returns>
     public async Task<List<TEntity2>> Get<TEntity2>(TEntity2[] entities)
@@ -222,13 +222,10 @@ public class TestingStoreManager
 
         using DbContext database = GetDatabase(new TEntity2().Database);
 
-        List<TEntity2> found = [];
-        foreach (TEntity2 entity in entities) {
-            TEntity2? foundEntity = await database.Set<TEntity2>().FindAsync(entity.Id);
-            if (foundEntity is not null) {
-                found.Add(foundEntity);
-            }
-        }
+        object[] ids = [.. entities.Select(entity => entity.Id)];
+        List<TEntity2> found = await database.Set<TEntity2>()
+            .Where(entity => ids.Contains(entity.Id))
+            .ToListAsync();
 
         return found;
     }

@@ -174,7 +174,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     #region Sampling
 
     /// <summary>
-    ///     Creates a new Asynchronous <typeparamref name="TEntity"/> instance based on the <see cref="EntityFactoryAsync(string)"/> implementation.
+    ///     Creates a new asynchronous <typeparamref name="TEntity"/> instance based on the <see cref="EntityFactoryAsync(string)"/> implementation.
     /// </summary>
     /// <returns> A new <typeparamref name="TEntity"/> instance </returns>
     /// <remarks>
@@ -196,8 +196,12 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     /// <remarks>
     ///     This <see cref="IEntity"/> instance collection is created but not stored in the database.
     /// </remarks>
-    protected Task<TEntity[]> Sampling(int Count) {
-        return Task.WhenAll([.. Enumerable.Range(0, Count).Select(_ => TestingStoreManager.RunEntityFactory(EntityFactory))]);
+    protected async Task<TEntity[]> Sampling(int Count) {
+        List<TEntity> samples = [];
+        for (int i = 0; i < Count; i++) {
+            samples.Add(await TestingStoreManager.RunEntityFactory(EntityFactory));
+        }
+        return [.. samples];
     }
 
     #endregion
@@ -560,14 +564,13 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
         await CommitSampleEntities([]);
 
         List<TEntity> searchedEntity = await Get([entity]);
-        Assert.Empty(searchedEntity);
 
         Assert.Multiple(
                 [
+                    () => Assert.Empty(searchedEntity),
                     () => Assert.False(deleteOutput.Failed),
                     () => Assert.Empty(deleteOutput.Failures),
                     () => Assert.NotEmpty(deleteOutput.Successes),
-                    () => Assert.Empty(searchedEntity),
                     () => {
                         TEntity deletedEntity = deleteOutput.Successes[0];
 

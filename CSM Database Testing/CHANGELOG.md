@@ -16,8 +16,7 @@
 
 ### Breaks
 
-- Now the EntityFactory() method in [DepotIntegrationTestsBase] it's an asynchronous method, so it must be awaited.
-
+- The EntityFactory() method in [DepotIntegrationTestsBase] is now asynchronous and must be awaited.
 
 ## [7.0.2] - 18.06-2026
 
