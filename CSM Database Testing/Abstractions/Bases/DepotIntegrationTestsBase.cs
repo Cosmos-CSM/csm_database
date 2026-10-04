@@ -103,7 +103,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     #region Abtraction
 
     /// <summary>
-    ///     Creates a context [Entity] for asynchronous testing data creation and assertion.
+    ///     Creates an [Entity] for testing purposes.
     /// </summary>
     /// <param name="Entropy">
     ///     Random 16 length value for unique properties.
@@ -174,7 +174,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     #region Sampling
 
     /// <summary>
-    ///     Creates a new asynchronous <typeparamref name="TEntity"/> instance based on the <see cref="EntityFactoryAsync(string)"/> implementation.
+    ///     Creates a new asynchronous <typeparamref name="TEntity"/> instance based on the <see cref="EntityFactory(string)"/> implementation.
     /// </summary>
     /// <returns> A new <typeparamref name="TEntity"/> instance </returns>
     /// <remarks>
