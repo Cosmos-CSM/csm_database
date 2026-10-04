@@ -7,7 +7,7 @@ using CSM_Database_Testing.Managers;
 namespace CSM_Database_Testing.Abstractions.Bases;
 
 /// <summary>
-///     Public Delegate for [Entity] factory [Quality] purposes.
+///     Public Delegate for Asynchronous [Entity] factory [Quality] purposes.
 /// </summary>
 /// <typeparam name="TEntity">
 ///     Type of the [Entity] to build.
@@ -18,7 +18,7 @@ namespace CSM_Database_Testing.Abstractions.Bases;
 /// <returns>
 ///     The Entity stored in the database.
 /// </returns>
-public delegate TEntity EntityFactory<TEntity>(string Entropy)
+public delegate Task<TEntity> EntityFactory<TEntity>(string Entropy)
     where TEntity : class, IEntity;
 
 /// <summary>
@@ -65,10 +65,10 @@ public class TestingDataHandlerBase
     }
 
     /// <inheritdoc cref="TestingStoreManager.Store{TEntity2}(EntityFactory{TEntity2})"/>
-    protected Task<TEntity2> Store<TEntity2>(EntityFactory<TEntity2> entityFactory)
+    protected async Task<TEntity2> Store<TEntity2>(EntityFactory<TEntity2> entityFactory)
         where TEntity2 : class, IEntity {
 
-        return _storeManager.Store(entityFactory);
+        return await _storeManager.Store(entityFactory);
     }
 
     /// <inheritdoc cref="TestingStoreManager.Store{TEntity2}(int, EntityFactory{TEntity2})"/>
@@ -76,5 +76,12 @@ public class TestingDataHandlerBase
         where TEntity2 : class, IEntity, new() {
 
         return await _storeManager.Store(quantity, entityFactory);
+    }
+
+    /// <inheritdoc cref="TestingStoreManager.Get{TEntity2}(TEntity2[])"/>
+    protected async Task<List<TEntity2>> Get<TEntity2>(TEntity2[] entities)
+        where TEntity2 : class, IEntity, new() {
+
+        return await _storeManager.Get(entities);
     }
 }

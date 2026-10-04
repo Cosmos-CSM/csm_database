@@ -127,7 +127,7 @@ public class TestingStoreManager
     public async Task<TEntity2> Store<TEntity2>(EntityFactory<TEntity2> entityFactory)
         where TEntity2 : class, IEntity {
 
-        TEntity2 toStore = RunEntityFactory(entityFactory);
+        TEntity2 toStore = await RunEntityFactory(entityFactory);
         toStore = await Store(toStore);
 
         return toStore;
@@ -156,7 +156,7 @@ public class TestingStoreManager
         using DbContext database = GetDatabase(new TEntity2().Database);
         for (int i = 0; i < quantity; i++) {
 
-            TEntity2 entity = RunEntityFactory(entityFactory);
+            TEntity2 entity = await RunEntityFactory(entityFactory);
             entity = await DatabaseUtils.SanitizeEntity(database, entity);
             entities.Add(entity);
         }
@@ -180,10 +180,10 @@ public class TestingStoreManager
     /// <returns>
     ///     The generated [Entity] object.
     /// </returns>
-    public static TEntity2 RunEntityFactory<TEntity2>(EntityFactory<TEntity2> factory)
+    public static async Task<TEntity2> RunEntityFactory<TEntity2>(EntityFactory<TEntity2> factory)
         where TEntity2 : class, IEntity {
 
-        return factory(RandomUtils.String(16));
+        return await factory(RandomUtils.String(16));
     }
 
     /// <summary>
@@ -202,5 +202,31 @@ public class TestingStoreManager
         return !_dbFactories.TryGetValue(databaseType, out DatabaseFactory? factory)
             ? throw new Exception($"No factory subscribed for [({databaseType.Name})]")
             : factory();
+    }
+
+    /// <summary>
+    ///     Retrieves the stored <typeparamref name="TEntity2"/> instances that match the given <paramref name="entities"/>.
+    /// </summary>
+    /// <typeparam name="TEntity2">
+    ///     Type of the <see cref="IEntity"/> to retrieve.
+    /// </typeparam>
+    /// <param name="entities">
+    ///     Collection of <see cref="IEntity"/> instances to look up.
+    /// </param>
+    /// <returns>
+    ///     A list of <typeparamref name="TEntity2"/> instances whose <see cref="IEntity.Id"/> is contained in <paramref name="entities"/>.
+    ///     Only the IDs that exist in the database are included.
+    /// </returns>
+    public async Task<List<TEntity2>> Get<TEntity2>(TEntity2[] entities)
+        where TEntity2 : class, IEntity, new() {
+
+        using DbContext database = GetDatabase(new TEntity2().Database);
+
+        object[] ids = [.. entities.Select(entity => entity.Id)];
+        List<TEntity2> found = await database.Set<TEntity2>()
+            .Where(entity => ids.Contains(entity.Id))
+            .ToListAsync();
+
+        return found;
     }
 }

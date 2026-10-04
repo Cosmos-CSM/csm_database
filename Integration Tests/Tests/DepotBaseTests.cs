@@ -17,13 +17,11 @@ namespace Integration_Tests.Tests;
 public class DepotBaseTests
     : DepotIntegrationTestsBase<EntityProxy, DepotProxy, DatabaseProxy.DatabaseProxy> {
 
-    protected override EntityProxy EntityFactory(string Entropy) {
+    protected override async Task<EntityProxy> EntityFactory(string Entropy) {
         return new EntityProxy {
-            EntityDependencyProxy = _storeManager.Store(
+            EntityDependencyProxy = await _storeManager.Store(
                     new EntityDependencyProxy()
                 )
-            .GetAwaiter()
-            .GetResult()
         };
     }
 
@@ -101,4 +99,5 @@ public class DepotBaseTests
                 updatedEntity.EntityDependencyProxy.Id
             );
     }
+
 }
