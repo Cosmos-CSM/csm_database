@@ -25,7 +25,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CSM Database Core\CSharp Database Extension.csproj" />
+    <ProjectReference Include="..\CSM Database Core\CSM Database Core.csproj" />
+    <ProjectReference Include="..\DatabaseProxy\DatabaseProxy.csproj" />
   </ItemGroup>
 
   <ItemGroup>
