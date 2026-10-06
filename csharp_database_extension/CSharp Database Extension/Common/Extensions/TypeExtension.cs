@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Reflection;
 
-namespace CSharp_Database_Extension.Core.Extensions;
+namespace CSharp_Database_Extension.Common.Extensions;
 
 /// <summary>
 ///     Provides extension methods for the <see cref="Type" /> class.

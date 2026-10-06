@@ -2,12 +2,11 @@
 using System.Reflection;
 
 using CSharp_Database_Extension;
-using CSharp_Database_Extension.Core.Errors;
-using CSharp_Database_Extension.Core.Models;
+using CSharp_Database_Extension.Common.Errors;
+using CSharp_Database_Extension.Common.Models;
 using CSharp_Database_Extension.Depots.Abstractions.Interfaces;
 using CSharp_Database_Extension.Depots.Models;
 using CSharp_Database_Extension.Depots.ViewFilters;
-using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
 
 using CSM_Database_Testing.Disposing.Abstractions.Bases;
 using CSM_Database_Testing.Managers;
@@ -61,17 +60,17 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     /// </param>
     public DepotIntegrationTestsBase(DatabaseFactory? database = null, params DatabaseFactory[] factories)
         : base(
-            [
-                ..factories,
-                () => database?.Invoke()
-                    ?? (TDatabase)Activator.CreateInstance(
-                        typeof(TDatabase),
-                        new DatabaseOptions<TDatabase> {
-                            ForTesting = true,
-                        }
-                    )!,
-            ]
-        ) {
+    [
+        ..factories,
+        () => database?.Invoke()
+            ?? (TDatabase)Activator.CreateInstance(
+                typeof(TDatabase),
+                new DatabaseOptions<TDatabase> {
+                    ForTesting = true,
+                }
+            )!,
+    ]
+) {
 
         _database = (TDatabase)database?.Invoke()!
                     ?? (TDatabase)Activator.CreateInstance(
@@ -197,11 +196,11 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     ///     This <see cref="IEntity"/> instance collection is created but not stored in the database.
     /// </remarks>
     protected async Task<TEntity[]> Sampling(int Count) {
-        List<TEntity> samples = [];
+        List<TEntity> samples = new List<TEntity>();
         for (int i = 0; i < Count; i++) {
             samples.Add(await TestingStoreManager.RunEntityFactory(EntityFactory));
         }
-        return [.. samples];
+        return samples.ToArray();
     }
 
     #endregion
@@ -217,7 +216,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
         TEntity sample = await Sampling();
 
         TEntity storedEntity = await _depot.Create(sample);
-        await CommitSampleEntities([storedEntity]);
+        await CommitSampleEntities(new IEntity[] { storedEntity });
 
         Assert.Multiple(
             [
@@ -287,7 +286,7 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
     [Fact(DisplayName = "[Read Batch]: Entities read by (Id)")]
     public virtual async Task Read_Batch_ById_Sucess() {
         TEntity[] samples = await Store(20, EntityFactory);
-        long[] sampleIds = [.. samples.Select(i => i.Id)];
+        long[] sampleIds = samples.Select(i => i.Id).ToArray();
 
         BatchOperationOutput<TEntity> readEntities = await _depot.Read(sampleIds);
         Assert.Multiple(
@@ -540,9 +539,9 @@ public abstract class DepotIntegrationTestsBase<TEntity, TDepot, TDatabase>
         TEntity entity = await Store(EntityFactory);
 
         await _depot.Delete(entity.Id);
-        await CommitSampleEntities([]);
+        await CommitSampleEntities(Array.Empty<IEntity>());
 
-        List<TEntity> searchedEntity = await Get([entity]);
+        List<TEntity> searchedEntity = await Get(new[] { entity });
         Assert.Empty(searchedEntity);
     }
 

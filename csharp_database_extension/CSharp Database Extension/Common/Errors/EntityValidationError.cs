@@ -2,7 +2,7 @@
 
 using CSharp_Extension.Errors.Abstractions.Bases;
 
-namespace CSharp_Database_Extension.Core.Errors;
+namespace CSharp_Database_Extension.Common.Errors;
 
 /// <summary>
 ///     Represents <see cref="EntityValidationError"/> events.

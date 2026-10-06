@@ -1,4 +1,4 @@
-﻿using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
+﻿using CSharp_Database_Extension;
 
 using CSM_Database_Testing.Disposing;
 using CSM_Database_Testing.Disposing.Abstractions.Bases;

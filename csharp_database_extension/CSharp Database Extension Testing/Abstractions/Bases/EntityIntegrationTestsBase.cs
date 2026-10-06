@@ -1,5 +1,5 @@
-﻿using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
-using CSharp_Database_Extension.Validation.Abstractions.Bases;
+﻿using CSharp_Database_Extension;
+using CSharp_Database_Extension.Entities.Validation.Abstractions.Bases;
 
 namespace CSM_Database_Testing.Abstractions.Bases;
 

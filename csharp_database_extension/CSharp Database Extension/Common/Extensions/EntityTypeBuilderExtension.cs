@@ -5,7 +5,7 @@ using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace CSharp_Database_Extension.Core.Extensions;
+namespace CSharp_Database_Extension.Common.Extensions;
 
 /// <summary>
 ///     Provide extension methods for <see cref="EntityTypeBuilder"/> class type. 

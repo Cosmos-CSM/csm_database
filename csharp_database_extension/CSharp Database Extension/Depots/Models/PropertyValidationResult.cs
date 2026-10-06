@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-using CSharp_Database_Extension.Core.Errors;
+using CSharp_Database_Extension.Common.Errors;
 
 namespace CSharp_Database_Extension.Depots.Models;
 

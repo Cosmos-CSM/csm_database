@@ -1,6 +1,6 @@
-﻿using CSharp_Database_Extension.Validation.Abstractions.Interfaces;
+﻿using CSharp_Database_Extension.Entities.Validation.Abstractions.Interfaces;
 
-namespace CSharp_Database_Extension.Validation.Abstractions.Bases;
+namespace CSharp_Database_Extension.Entities.Validation.Abstractions.Bases;
 
 /// <inheritdoc cref="IValidator"/>
 [AttributeUsage(AttributeTargets.Property)]

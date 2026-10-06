@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 
 using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
-using CSharp_Database_Extension.Validation.Abstractions.Bases;
+using CSharp_Database_Extension.Entities.Validation.Abstractions.Bases;
 
 using CSharp_Extension.Common.Abstractions.Bases;
 
@@ -33,6 +33,12 @@ public abstract partial class EntityBase
 
     /// <inheritdoc/>
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+
+    /// <inheritdoc/>
+    public string Name { get; set; } = string.Empty;
+
+    /// <inheritdoc/>
+    public string? Description { get; set; }
 
     /// <summary>
     ///     Creates a new instance.

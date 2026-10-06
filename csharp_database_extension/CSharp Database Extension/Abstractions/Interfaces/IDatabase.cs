@@ -1,4 +1,6 @@
-﻿namespace CSharp_Database_Extension.Abstractions.Interfaces;
+﻿using CSharp_Database_Extension.Common.Enums;
+
+namespace CSharp_Database_Extension.Abstractions.Interfaces;
 
 /// <summary>
 ///     Represents a Database model.
@@ -9,6 +11,11 @@ public interface IDatabase {
     ///     Database signature, used to be identified along ecosystems.
     /// </summary>
     string Signature { get; }
+
+    /// <summary>
+    ///    Database provider type.
+    /// </summary>
+    DatabaseProviders Provider { get; }
 
     /// <summary>
     ///     Validates database connection and configuration health.

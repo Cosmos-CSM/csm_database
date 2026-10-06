@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
 
 using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
-using CSharp_Database_Extension.Validation.Abstractions.Bases;
+using CSharp_Database_Extension.Entities.Validation.Abstractions.Bases;
 
 using CSharp_Extension.Errors.Abstractions.Bases;
 
-namespace CSharp_Database_Extension.Core.Errors;
+namespace CSharp_Database_Extension.Common.Errors;
 
 /// <summary>
 ///     Represents <see cref="ValidatorError"/> events.

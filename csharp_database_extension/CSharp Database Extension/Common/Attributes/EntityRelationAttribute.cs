@@ -1,6 +1,6 @@
-﻿using CSharp_Database_Extension.Core.Attributes.Abstractions.Bases;
+﻿using CSharp_Database_Extension.Common.Attributes.Abstractions.Bases;
 
-namespace CSharp_Database_Extension.Core.Attributes;
+namespace CSharp_Database_Extension.Common.Attributes;
 
 /// <summary>
 ///     Attribute to mark a relation dependency.

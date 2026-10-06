@@ -1,4 +1,4 @@
-﻿namespace CSharp_Database_Extension.Validation.Abstractions.Interfaces;
+﻿namespace CSharp_Database_Extension.Entities.Validation.Abstractions.Interfaces;
 
 /// <summary>
 ///     Represents a property validator instruction.

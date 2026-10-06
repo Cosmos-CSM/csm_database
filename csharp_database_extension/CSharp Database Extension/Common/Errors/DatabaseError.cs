@@ -1,6 +1,6 @@
 ﻿using CSharp_Extension.Errors.Abstractions.Bases;
 
-namespace CSharp_Database_Extension.Core.Errors;
+namespace CSharp_Database_Extension.Common.Errors;
 
 /// <summary>
 ///     Represents the <see cref="DatabaseError"/> exception events.

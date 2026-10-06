@@ -1,6 +1,6 @@
-﻿using CSharp_Database_Extension.Core.Attributes.Abstractions.Interfaces;
+﻿using CSharp_Database_Extension.Common.Attributes.Abstractions.Interfaces;
 
-namespace CSharp_Database_Extension.Core.Attributes.Abstractions.Bases;
+namespace CSharp_Database_Extension.Common.Attributes.Abstractions.Bases;
 
 /// <inheritdoc cref="IRelationAttribute"/>
 public abstract class RelationAttributeBase

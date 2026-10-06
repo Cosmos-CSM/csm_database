@@ -1,9 +1,10 @@
 ﻿using System.Reflection;
 
 using CSharp_Database_Extension.Abstractions.Interfaces;
+using CSharp_Database_Extension.Common.Enums;
+using CSharp_Database_Extension.Common.Errors;
 using CSharp_Database_Extension.Common.Models;
-using CSharp_Database_Extension.Core.Errors;
-using CSharp_Database_Extension.Core.Utils;
+using CSharp_Database_Extension.Common.Utils;
 using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
 
 using CSharp_Extension.Common.Utils;
@@ -27,8 +28,11 @@ public abstract partial class DatabaseBase<TDatabases>
     /// <inheritdoc/>
     public virtual string Signature { get; protected set; } = "";
 
+    /// <inheritdoc/>
+    public virtual DatabaseProviders Provider { get; protected set; } = DatabaseProviders.PostgreSQL;
+
     /// <summary>
-    ///     Database model; options.
+    ///     Database model options.
     /// </summary>
     public DatabaseOptions<TDatabases> Options { get; init; }
 
@@ -37,7 +41,7 @@ public abstract partial class DatabaseBase<TDatabases>
     /// </summary>
     public DatabaseBase() {
         Options = new DatabaseOptions<TDatabases>();
-        BuildOptions();
+        CompleteOptions();
     }
 
     /// <summary>
@@ -50,11 +54,8 @@ public abstract partial class DatabaseBase<TDatabases>
         : base(databaseOptions.DbContextOptions ?? new()) {
         Options = databaseOptions;
 
-        BuildOptions();
+        CompleteOptions();
     }
-
-
-    #region Public
 
     /// <inheritdoc/>
     public bool Validate(bool strict = true) {
@@ -82,7 +83,7 @@ public abstract partial class DatabaseBase<TDatabases>
 
                 return false;
             }
-            return ValidateEntityDefinitions(strict);
+            return ValidateEntityModels(strict);
         }
 
         try {
@@ -97,27 +98,13 @@ public abstract partial class DatabaseBase<TDatabases>
         }
     }
 
-    #endregion
-
     /// <summary>
-    ///     Validates <see cref="Options"/> dependencies and generates required ones.
-    /// </summary>
-    /// <remarks>
-    ///     Important process, is required to be called in each constructor.
-    /// </remarks>
-    void BuildOptions() {
-        Options.Signature ??= Signature;
-
-        Options.ConnectionOptions ??= DatabaseUtils.GetConnectionOptions(Signature, Options.ForTesting);
-    }
-
-    /// <summary>
-    ///     Gets all database entity definitions.
+    ///     Gets database entity models.
     /// </summary>
     /// <returns>
-    ///     Database entity definitions.
+    ///     Database entity instances as models.
     /// </returns>
-    protected EntityBase[] GetEntityDefinitions() {
+    protected EntityBase[] GetEntityModels() {
         Type dbType = GetType();
 
         List<EntityBase> entityModels = [];
@@ -150,79 +137,26 @@ public abstract partial class DatabaseBase<TDatabases>
         return [.. entityModels];
     }
 
-    /// <summary>
-    ///     Validate that all database entities are correctly defined.
-    /// </summary>
-    /// <param name="strict">
-    ///     Whether the engines should be stopped on invalid entities.
-    /// </param>
-    bool ValidateEntityDefinitions(bool strict = true) {
-
-        bool logsOn = Options.EnableLogging;
-        EntityBase[] defs = GetEntityDefinitions();
-
-        if (logsOn) {
-            ConsoleUtils.Announce(
-                $"[{GetType().Name}] Validatig Sets...",
-                new() {
-                    { "Count", defs.Length }
-                }
-            );
-        }
-
-        Exception[] evResults = [];
-        foreach (EntityBase entity in defs) {
-            Exception[] result = entity.EvaluateModel();
-            if (result.Length > 0 && logsOn) {
-                ConsoleUtils.Warning(
-                    "Wrong [DbSet] definition",
-                    new() {
-                        { "Set", entity.GetType().Name },
-                        { "Exceptions", result },
-                    }
-                );
-            }
-
-            evResults = [.. evResults, .. result];
-        }
-
-        if (evResults.Length > 0) {
-            if (strict)
-                throw new Exception("Database [DbSet] definition failures");
-
-            return false;
-        }
-
-        if (logsOn)
-            ConsoleUtils.Success($"[{GetType().Name}] Set validation succeeded");
-
-        return true;
-    }
-
-    /// <summary>
-    ///     Designs the current <paramref name="mBuilder"/> instance for the given <paramref name="entity"/>, overriding
-    ///     the current behavior.
-    /// </summary>
-    /// <param name="entity">
-    ///     Entity instance being designed.
-    /// </param>
-    /// <param name="mBuilder">
-    ///     Global database model builder instance.
-    /// </param>
-    protected virtual void DesignEntity(EntityBase entity, EntityTypeBuilder mBuilder) { }
-
-    /// <summary>
-    ///     Designs the current <paramref name="mBuilder"/> instance for the database, overriding the current behavior.
-    /// </summary>
-    /// <param name="mBuilder">
-    ///     Global database model builder instance.
-    /// </param>
-    protected virtual void DesignDatabase(ModelBuilder mBuilder) { }
-
     /// <inheritdoc/>
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
         string connectionString = Options.ConnectionOptions!.ConnectionString;
-        optionsBuilder.UseSqlServer(connectionString);
+
+        string assemblyNamespace = $"{GetType().Assembly.GetName().Name}.Migrations";
+
+        switch (Options.Provider) {
+            case DatabaseProviders.SQLServer:
+                optionsBuilder.UseSqlServer(
+                        connectionString,
+                        builder => builder.MigrationsAssembly($"{assemblyNamespace}.SQLServer")
+                    );
+                break;
+            case DatabaseProviders.PostgreSQL:
+                optionsBuilder.UseNpgsql(
+                        connectionString,
+                        builder => builder.MigrationsAssembly($"{assemblyNamespace}.PostgreSQL")
+                    );
+                break;
+        }
 
         // We catch when the execution context is an Entity Framework design runtime.
         if (AppDomain.CurrentDomain.FriendlyName.Contains("ef")) {
@@ -260,22 +194,15 @@ public abstract partial class DatabaseBase<TDatabases>
             }
         }
 
-        EntityBase[] sets = GetEntityDefinitions();
+        EntityBase[] entityModels = GetEntityModels();
 
-        foreach (EntityBase entity in sets) {
-            Type setType = entity.GetType();
+        foreach (EntityBase entity in entityModels) {
+            Type entityModelType = entity.GetType();
             mBuilder.Entity(
-                setType,
+                entityModelType,
                 (etBuilder) => {
-                    etBuilder.HasKey(nameof(IEntity.Id));
-                    etBuilder.Property<long>(nameof(IEntity.Id)).IsRequired();
-
-                    DesignEntityInterfacing(etBuilder, entity);
+                    DesignEntityModelInterfaces(etBuilder, entity);
                     DesignEntity(entity, etBuilder);
-
-                    etBuilder.Property(nameof(IEntity.Timestamp))
-                        .HasColumnType("datetime2(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
 
                     entity.DesignEntity(etBuilder);
                 }
@@ -283,6 +210,92 @@ public abstract partial class DatabaseBase<TDatabases>
         }
 
         base.OnModelCreating(mBuilder);
+    }
+
+    /// <summary>
+    ///     Designs the database entity models type, in order to be translated to database provider language.
+    /// </summary>
+    /// <param name="entity">
+    ///     Entity Model to be designed.
+    /// </param>
+    /// <param name="mBuilder">
+    ///     Global database entity model builder.
+    /// </param>
+    protected virtual void DesignEntity(EntityBase entity, EntityTypeBuilder mBuilder) { }
+
+    /// <summary>
+    ///     Designs the current <paramref name="mBuilder"/> instance for the database, overriding the current behavior.
+    /// </summary>
+    /// <param name="mBuilder">
+    ///     Global database model builder instance.
+    /// </param>
+    protected virtual void DesignDatabase(ModelBuilder mBuilder) { }
+
+    /// <summary>
+    ///     Completes missing <see cref="Options"/> values that are auto-loaded
+    ///     by system properties or values calculated at runtime.
+    /// </summary>
+    /// <remarks>
+    ///     Important process, is required to be called in each constructor of this class.
+    /// </remarks>
+    void CompleteOptions() {
+        Options.Signature ??= Signature;
+
+        // When current options provider is the default one.
+        if (Options.Provider == DatabaseProviders.PostgreSQL) {
+            Options.Provider = Provider;
+        }
+
+        Options.ConnectionOptions ??= DatabaseUtils.GetConnectionOptions(Signature, Options.ForTesting);
+    }
+
+    /// <summary>
+    ///     Validate database entity models.
+    /// </summary>
+    /// <param name="strict">
+    ///     Whether the engines should be stopped on invalid entities.
+    /// </param>
+    bool ValidateEntityModels(bool strict = true) {
+
+        bool logsOn = Options.EnableLogging;
+        EntityBase[] defs = GetEntityModels();
+
+        if (logsOn) {
+            ConsoleUtils.Announce(
+                $"[{GetType().Name}] Validatig Entity Models...",
+                new() {
+                    { "Count", defs.Length }
+                }
+            );
+        }
+
+        Exception[] evResults = [];
+        foreach (EntityBase entity in defs) {
+            Exception[] result = entity.EvaluateModel();
+            if (result.Length > 0 && logsOn) {
+                ConsoleUtils.Warning(
+                    "Wrong [Entity Model] definition",
+                    new() {
+                        { "Entity Model", entity.GetType().Name },
+                        { "Result", result },
+                    }
+                );
+            }
+
+            evResults = [.. evResults, .. result];
+        }
+
+        if (evResults.Length > 0) {
+            if (strict)
+                throw new Exception("Database [Entity Models] validation failed");
+
+            return false;
+        }
+
+        if (logsOn)
+            ConsoleUtils.Success($"[{GetType().Name}] Set validation succeeded");
+
+        return true;
     }
 
     /// <summary>
@@ -294,28 +307,29 @@ public abstract partial class DatabaseBase<TDatabases>
     /// <param name="entity">
     ///     Entity instance modeled.
     /// </param>
-    static void DesignEntityInterfacing(EntityTypeBuilder etBuilder, EntityBase entity) {
-        if (entity is INamedEntity) {
-            PropertyInfo nameProperty = entity.GetProperty(nameof(INamedEntity.Name));
-            PropertyInfo descriptionProperty = entity.GetProperty(nameof(INamedEntity.Description));
+    static void DesignEntityModelInterfaces(EntityTypeBuilder etBuilder, EntityBase entity) {
+        etBuilder.HasKey(nameof(IEntity.Id));
+        etBuilder.Property<long>(nameof(IEntity.Id))
+            .IsRequired();
 
-            etBuilder
-                .HasIndex(nameProperty.Name)
-                .IsUnique();
-            etBuilder
-                .Property(nameProperty.Name)
-                .HasMaxLength(100).IsRequired();
+        PropertyInfo nameProperty = entity.GetProperty(nameof(IEntity.Name));
+        PropertyInfo descriptionProperty = entity.GetProperty(nameof(IEntity.Description));
 
-            etBuilder
-                .Property(descriptionProperty.Name);
-        }
+        etBuilder
+            .HasIndex(nameProperty.Name)
+            .IsUnique();
+        etBuilder
+            .Property(nameProperty.Name)
+            .HasMaxLength(200)
+            .IsRequired();
 
-        if (entity is IActivableEntity) {
-            PropertyInfo isEnabledProperty = entity.GetProperty(nameof(IActivableEntity.IsEnabled));
+        etBuilder
+            .Property(descriptionProperty.Name);
 
-            etBuilder.Property(isEnabledProperty.Name)
-                .IsRequired();
-        }
+        etBuilder.Property(nameof(IEntity.Timestamp))
+            .HasColumnType("datetime2(7)")
+            .HasDefaultValueSql("GETUTCDATE()")
+            .IsRowVersion();
     }
 }
 

@@ -1,5 +1,4 @@
 ﻿using CSharp_Database_Extension.Common.Enums;
-using CSharp_Database_Extension.Core.Models;
 
 using Microsoft.EntityFrameworkCore;
 

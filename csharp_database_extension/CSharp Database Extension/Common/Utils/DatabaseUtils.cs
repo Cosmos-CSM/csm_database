@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 using System.Text.Json;
 
-using CSharp_Database_Extension.Core.Attributes;
-using CSharp_Database_Extension.Core.Models;
+using CSharp_Database_Extension.Common.Attributes;
+using CSharp_Database_Extension.Common.Models;
 using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
 
 using CSharp_Extension;
@@ -12,7 +12,7 @@ using CSharp_Extension.Errors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace CSharp_Database_Extension.Core.Utils;
+namespace CSharp_Database_Extension.Common.Utils;
 
 /// <summary>
 ///     Provide utilities methods for database purposes.

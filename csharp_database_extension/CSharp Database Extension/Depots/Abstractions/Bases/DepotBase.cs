@@ -2,10 +2,10 @@
 using System.Data;
 using System.Reflection;
 
-using CSharp_Database_Extension.Core.Attributes.Abstractions.Interfaces;
-using CSharp_Database_Extension.Core.Errors;
-using CSharp_Database_Extension.Core.Extensions;
-using CSharp_Database_Extension.Core.Utils;
+using CSharp_Database_Extension.Common.Attributes.Abstractions.Interfaces;
+using CSharp_Database_Extension.Common.Errors;
+using CSharp_Database_Extension.Common.Extensions;
+using CSharp_Database_Extension.Common.Utils;
 using CSharp_Database_Extension.Depots.Abstractions.Interfaces;
 using CSharp_Database_Extension.Depots.Models;
 using CSharp_Database_Extension.Depots.Models.Structs;

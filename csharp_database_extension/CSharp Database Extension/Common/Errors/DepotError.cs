@@ -6,7 +6,7 @@ using CSharp_Extension;
 using CSharp_Extension.Errors.Abstractions.Bases;
 using CSharp_Extension.Errors.Models;
 
-namespace CSharp_Database_Extension.Core.Errors;
+namespace CSharp_Database_Extension.Common.Errors;
 
 /// <summary>
 ///     Represents the <see cref="DepotError{TEntity}"/> trigger events.

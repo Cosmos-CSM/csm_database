@@ -1,4 +1,4 @@
-﻿using CSharp_Database_Extension.Core.Errors;
+﻿using CSharp_Database_Extension.Common.Errors;
 using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
 
 namespace CSharp_Database_Extension.Depots.Models;

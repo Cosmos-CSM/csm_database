@@ -1,10 +1,10 @@
 ﻿using System.Collections;
 using System.Reflection;
 
-using CSharp_Database_Extension.Core.Attributes.Abstractions.Interfaces;
+using CSharp_Database_Extension.Common.Attributes.Abstractions.Interfaces;
 using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
 
-namespace CSharp_Database_Extension.Core.Utils;
+namespace CSharp_Database_Extension.Common.Utils;
 
 /// <summary>
 ///     Provide utility methods for <see cref="IEntity"/> objects.

@@ -1,21 +1,21 @@
-﻿
-
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 using CSharp_Extension.Convertion.Abstractions.Interfaces;
 
-namespace CSharp_Database_Extension.Entities.Abstractions.Interfaces;
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+namespace CSharp_Database_Extension;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 
 /// <summary>
-///     Represents a tenant business live stored entity model, that usually are objects wich data are grouped by bound that 
-///     instrinsictly defines their own.
+///     Represents a business entity model.
 /// </summary>
-public interface IEntity
+public partial interface IEntity
     : IConverterVariant {
 
     /// <summary>
-    ///     Type of the <see cref="CSharp_Database_Extension.Abstractions.Interfaces.IDatabase"/> implementation that stores this <see cref="IEntity"/> implementation.
+    ///     Type of the <see cref="Abstractions.Interfaces.IDatabase"/> implementation that stores this <see cref="IEntity"/> implementation.
     /// </summary>
     [JsonIgnore, NotMapped]
     Type Database { get; init; }
@@ -24,6 +24,20 @@ public interface IEntity
     ///     Unique data storages direct pointer identifier.
     /// </summary>
     long Id { get; set; }
+
+    /// <summary>
+    ///     Entity instance name.
+    /// </summary>
+    /// <remarks>
+    ///     Length min 1, max 200.
+    /// </remarks>
+    [StringLength(200, MinimumLength = 1)]
+    string Name { get; set; }
+
+    /// <summary>
+    ///     Entity instance description.
+    /// </summary>
+    string? Description { get; set; }
 
     /// <summary>
     ///     Time mark for the last time this <see cref="IEntity"/> got created and stored into data storage sources.

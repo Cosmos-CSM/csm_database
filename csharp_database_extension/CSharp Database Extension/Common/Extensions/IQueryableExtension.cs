@@ -8,7 +8,7 @@ using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace CSharp_Database_Extension.Core.Extensions;
+namespace CSharp_Database_Extension.Common.Extensions;
 
 /// <summary>
 ///     Extension class for <see cref="IQueryable{T}"/> objects.

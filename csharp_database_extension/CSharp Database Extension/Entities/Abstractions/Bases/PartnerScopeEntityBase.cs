@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-using CSharp_Database_Extension.Core.Extensions;
+using CSharp_Database_Extension.Common.Extensions;
 using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
 
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

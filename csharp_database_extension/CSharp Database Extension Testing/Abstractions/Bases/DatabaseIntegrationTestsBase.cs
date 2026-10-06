@@ -1,5 +1,5 @@
 ﻿using CSharp_Database_Extension;
-using CSharp_Database_Extension.Core.Models;
+using CSharp_Database_Extension.Common.Models;
 
 using CSharp_Extension.Common.Extensions;
 

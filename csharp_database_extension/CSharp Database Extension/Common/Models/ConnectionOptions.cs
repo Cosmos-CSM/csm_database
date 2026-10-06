@@ -1,4 +1,4 @@
-﻿namespace CSharp_Database_Extension.Core.Models;
+﻿namespace CSharp_Database_Extension.Common.Models;
 
 /// <summary>
 ///     Represents a database server connection options.

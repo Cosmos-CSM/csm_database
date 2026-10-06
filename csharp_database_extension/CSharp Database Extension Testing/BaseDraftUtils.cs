@@ -1,4 +1,5 @@
-﻿using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
+﻿using CSharp_Database_Extension;
+using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
 
 using CSharp_Extension.Common.Utils;
 
@@ -76,54 +77,6 @@ static public class BaseDraftUtils {
     }
 
     /// <summary>
-    ///     Drafts an <typeparamref name="TActivableEntity"/> instance with random data. 
-    /// </summary>
-    /// <typeparam name="TActivableEntity">
-    ///     Type of the entity to draft.
-    /// </typeparam>
-    /// <param name="ref">
-    ///     Default values for the entity.
-    /// </param>
-    /// <returns>
-    ///     A drafted <typeparamref name="TActivableEntity"/> instance.
-    /// </returns>
-    static public TActivableEntity ActivableEntity<TActivableEntity>(TActivableEntity? @ref = default)
-        where TActivableEntity : IActivableEntity, new() {
-
-        @ref ??= Entity(@ref);
-
-        return @ref;
-    }
-
-    /// <summary>
-    ///     Drafts a <typeparamref name="TNamedEntity"/> instance with random data.
-    /// </summary>
-    /// <typeparam name="TNamedEntity">
-    ///     Type of the entity to draft.
-    /// </typeparam>
-    /// <param name="ref">
-    ///     Default entity values.
-    /// </param>
-    /// <returns>
-    ///     A drafted <typeparamref name="TNamedEntity"/> instance.
-    /// </returns>
-    static public TNamedEntity NamedEntity<TNamedEntity>(TNamedEntity? @ref = default)
-        where TNamedEntity : INamedEntity, new() {
-
-        @ref ??= Entity(@ref);
-
-        if (string.IsNullOrWhiteSpace(@ref.Name)) {
-            @ref.Name = $"{Rnd}_name";
-        }
-
-        if (string.IsNullOrWhiteSpace(@ref.Description)) {
-            @ref.Description = $"drafted entity {DateTime.Now:t}";
-        }
-
-        return @ref;
-    }
-
-    /// <summary>
     ///     Drafts an <typeparamref name="TEntity"/> instance with random data.
     /// </summary>
     /// <typeparam name="TEntity">
@@ -139,6 +92,13 @@ static public class BaseDraftUtils {
         where TEntity : IEntity, new() {
 
         @ref ??= new TEntity();
+        if (string.IsNullOrWhiteSpace(@ref.Name)) {
+            @ref.Name = $"{Rnd}_name";
+        }
+
+        if (string.IsNullOrWhiteSpace(@ref.Description)) {
+            @ref.Description = $"drafted entity {DateTime.Now:t}";
+        }
 
         return @ref;
     }

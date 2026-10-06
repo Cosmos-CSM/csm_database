@@ -1,4 +1,4 @@
-﻿using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
+﻿using CSharp_Database_Extension;
 
 using CSharp_Extension.Common.Abstractions.Interfaces;
 

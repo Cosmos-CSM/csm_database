@@ -1,5 +1,5 @@
-﻿using CSharp_Database_Extension.Core.Utils;
-using CSharp_Database_Extension.Entities.Abstractions.Interfaces;
+﻿using CSharp_Database_Extension;
+using CSharp_Database_Extension.Common.Utils;
 
 using CSharp_Extension.Common.Utils;
 

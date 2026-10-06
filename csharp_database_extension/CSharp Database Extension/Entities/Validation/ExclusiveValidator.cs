@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
 
-using CSharp_Database_Extension.Validation.Abstractions.Bases;
+using CSharp_Database_Extension.Entities.Validation.Abstractions.Bases;
 
-namespace CSharp_Database_Extension.Validation;
+namespace CSharp_Database_Extension.Entities.Validation;
 
 /// <summary>
-///     
+///     Repreents an Entity Model property groups strict assigantion validator. 
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
 public class ExclusiveValidator
