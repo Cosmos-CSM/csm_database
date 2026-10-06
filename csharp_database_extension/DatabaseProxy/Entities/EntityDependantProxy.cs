@@ -1,6 +1,6 @@
-﻿using CSM_Database_Core;
-using CSM_Database_Core.Core.Attributes;
-using CSM_Database_Core.Core.Extensions;
+﻿using CSharp_Database_Extension;
+using CSharp_Database_Extension.Common.Attributes;
+using CSharp_Database_Extension.Common.Extensions;
 
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

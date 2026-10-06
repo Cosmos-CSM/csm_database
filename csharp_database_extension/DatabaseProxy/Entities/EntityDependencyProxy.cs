@@ -1,5 +1,5 @@
-﻿using CSM_Database_Core;
-using CSM_Database_Core.Core.Attributes;
+﻿using CSharp_Database_Extension;
+using CSharp_Database_Extension.Common.Attributes;
 
 namespace DatabaseProxy.Entities;
 

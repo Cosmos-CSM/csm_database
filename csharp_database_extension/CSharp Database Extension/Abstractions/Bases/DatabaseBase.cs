@@ -344,7 +344,7 @@ public abstract partial class EntityBase {
     ///     Proxy object to configure Entity Model to Entity Framework Core.
     /// </param>
     /// <remarks>
-    ///     Don't describe <see cref="IEntity"/> properties they are being auto-described by the [CSM] engine, <see cref="IEntity.Id"/>, <see cref="IEntity.Timestamp"/> and <see cref="INamedEntity.Name"/>.
+    ///     Don't describe <see cref="IEntity"/> properties they are being auto-described by the [CSM] engine, <see cref="IEntity.Id"/>, <see cref="IEntity.Timestamp"/> and <see cref="IEntity.Name"/>.
     /// </remarks>
     protected internal virtual void DesignEntity(EntityTypeBuilder etBuilder) { }
 }

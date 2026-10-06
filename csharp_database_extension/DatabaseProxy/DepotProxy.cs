@@ -1,7 +1,7 @@
-﻿using CSM_Database_Core.Depots.Abstractions.Bases;
-using CSM_Database_Core.Entities.Abstractions.Interfaces;
+﻿using CSharp_Database_Extension;
+using CSharp_Database_Extension.Depots.Abstractions.Bases;
 
-using CSM_Foundation_Core.Abstractions.Interfaces;
+using CSharp_Extension.Common.Abstractions.Interfaces;
 
 using DatabaseProxy.Entities;
 

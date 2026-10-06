@@ -1,25 +1,25 @@
-﻿using CSM_Foundation_Core.Core.Utils;
+﻿using CSharp_Extension.Common.Utils;
 
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace CSM_Security_Database_Core;
+namespace DatabaseProxy;
 
 /// <summary>
 ///     EF Design time factory for <see cref="DatabaseProxy.DatabaseProxy"/>
 /// </summary>
 internal class DatabaseProxyDesignFactory
-    : IDesignTimeDbContextFactory<DatabaseProxy.DatabaseProxy> {
+    : IDesignTimeDbContextFactory<DatabaseProxy> {
 
 
-    public DatabaseProxy.DatabaseProxy CreateDbContext(string[] args) {
+    public DatabaseProxy CreateDbContext(string[] args) {
         ConsoleUtils.Warning(
             "Designing database using a design factory",
             new Dictionary<string, object?> {
                 { "DesignFactory", GetType().FullName },
-                { "Database", typeof(DatabaseProxy.DatabaseProxy).FullName  },
+                { "Database", typeof(DatabaseProxy).FullName  },
             }
         );
 
-        return new DatabaseProxy.DatabaseProxy();
+        return new DatabaseProxy();
     }
 }

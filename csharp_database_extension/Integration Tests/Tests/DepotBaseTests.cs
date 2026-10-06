@@ -1,6 +1,5 @@
-﻿using CSM_Database_Core.Depots.Abstractions.Bases;
-using CSM_Database_Core.Depots.Models;
-using CSM_Database_Core.Depots.Models.Structs;
+﻿using CSharp_Database_Extension.Depots.Models;
+using CSharp_Database_Extension.Depots.Models.Structs;
 
 using CSM_Database_Testing.Abstractions.Bases;
 

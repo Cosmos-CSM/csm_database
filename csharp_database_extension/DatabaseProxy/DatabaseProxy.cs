@@ -1,5 +1,5 @@
-﻿using CSM_Database_Core;
-using CSM_Database_Core.Core.Models;
+﻿using CSharp_Database_Extension;
+using CSharp_Database_Extension.Common.Models;
 
 using DatabaseProxy.Entities;
 
@@ -14,7 +14,7 @@ public class DatabaseProxy
     : DatabaseBase<DatabaseProxy> {
 
     /// <inheritdoc/>
-    public override string Sign { get; protected set; } = "CSMDQ";
+    public override string Signature { get; protected set; } = "CSMDQ";
 
     /// <inheritdoc/>
     public DatabaseProxy()
