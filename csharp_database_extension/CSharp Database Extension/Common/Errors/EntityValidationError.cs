@@ -1,0 +1,60 @@
+﻿using CSharp_Database_Extension.Depots.Models;
+
+using CSharp_Extension.Errors.Abstractions.Bases;
+
+namespace CSharp_Database_Extension.Core.Errors;
+
+/// <summary>
+///     Represents <see cref="EntityValidationError"/> events.
+/// </summary>
+public enum EntityValidationErrorEvents {
+
+    /// <summary>
+    ///     Event when entity read validation has failed.
+    /// </summary>
+    READ_FAILED,
+
+    /// <summary>
+    ///     Event when entity write validation has failed.
+    /// </summary>
+    WRITE_FAILED,
+}
+
+/// <summary>
+///     Represents and error occurred during entity validation.
+/// </summary>
+public class EntityValidationError
+    : ErrorBase<EntityValidationErrorEvents> {
+
+    /// <summary>
+    ///     Runtime type of the Entity that failed.
+    /// </summary>
+    public Type EntityType;
+
+    /// <summary>
+    ///     Validations results. 
+    /// </summary>
+    public PropertyValidationResult[] Results;
+
+    /// <summary>
+    ///     Creates a new instance.
+    /// </summary>
+    /// <param name="entityType">
+    ///     Type of the entity that thrown the error.
+    /// </param>
+    /// <param name="event">
+    ///     Error event.
+    /// </param>
+    /// <param name="results">
+    ///     Error validation results.
+    /// </param>
+    public EntityValidationError(Type entityType, EntityValidationErrorEvents @event, PropertyValidationResult[] results)
+        : base($"Entity ({entityType}) validation has failed.", @event) {
+
+        Results = results;
+        EntityType = entityType;
+
+        Data.Add(nameof(Results), results);
+        Data.Add(nameof(EntityType), entityType);
+    }
+}

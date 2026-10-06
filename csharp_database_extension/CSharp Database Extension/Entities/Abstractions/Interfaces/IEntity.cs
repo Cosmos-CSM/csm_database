@@ -1,0 +1,68 @@
+﻿
+
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+
+using CSharp_Extension.Convertion.Abstractions.Interfaces;
+
+namespace CSharp_Database_Extension.Entities.Abstractions.Interfaces;
+
+/// <summary>
+///     Represents a tenant business live stored entity model, that usually are objects wich data are grouped by bound that 
+///     instrinsictly defines their own.
+/// </summary>
+public interface IEntity
+    : IConverterVariant {
+
+    /// <summary>
+    ///     Type of the <see cref="CSharp_Database_Extension.Abstractions.Interfaces.IDatabase"/> implementation that stores this <see cref="IEntity"/> implementation.
+    /// </summary>
+    [JsonIgnore, NotMapped]
+    Type Database { get; init; }
+
+    /// <summary>
+    ///     Unique data storages direct pointer identifier.
+    /// </summary>
+    long Id { get; set; }
+
+    /// <summary>
+    ///     Time mark for the last time this <see cref="IEntity"/> got created and stored into data storage sources.
+    /// </summary>
+    DateTime Timestamp { get; set; }
+
+    /// <summary>
+    ///     This method evaluates the current record after being read from [Database] to determine
+    ///     if all ist content is correctly reviewed, this is done because there might be a posibility that some users
+    ///     or administration pushes data directly into the [Database] bypassing the system programmed validations.
+    ///    
+    ///     <para>
+    ///         This method can throw directly exceptions due to this kind of integrity methods are 
+    ///         strict and must mandatory break any kind of operation into the system to prevent
+    ///         wrong usage and handling of corrupt data.
+    ///     </para>
+    /// </summary>
+    void EvaluateRead();
+
+    /// <summary>
+    ///     This method evaluates the current record to be stored in the [Database] storage system,
+    ///     this helps to keep the integrity of our data into our storage systems.
+    ///     
+    ///     <para>
+    ///         This method can throw directly exceptions due to this kind of integrity methods are 
+    ///         strict and must mandatory break any kind of operation into the system to prevent
+    ///         wrong usage and handling of corrupt data.
+    ///     </para>
+    /// </summary>
+    void EvaluateWrite();
+
+    /// <summary>
+    ///     This method is used to evaluate the model definition, this means will evaluate
+    ///     if the <see cref="EvaluateRead"/> and <see cref="EvaluateWrite"/> operations work as expected
+    ///     before the system start its engine, this function might break the system rawSet up and stop advising
+    ///     about the found exceptions.
+    /// </summary>
+    /// <returns>
+    ///     Collection of exceptions found at definition evaluation.
+    /// </returns>
+    Exception[] EvaluateModel();
+}
